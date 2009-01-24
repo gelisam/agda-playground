@@ -11,9 +11,10 @@ open import Relation.Binary.PropositionalEquality
 data HList : List₁ Set → Set1 where
   []  : HList []
 
-  _∷_ : {α : Set} (x : α) {xs : List₁ Set}
-      → HList xs
-      → HList (α ∷ xs)
+  _∷_ : {α : Set} {Δ : List₁ Set}
+      → (x : α)
+      → HList Δ
+      → HList (α ∷ Δ)
 
 infix 4 _∈_
 data _∈_ {α : Set1} : α → List₁ α → Set1 where
@@ -26,13 +27,13 @@ _×₁₁_ : Set1 → Set1 → Set1
 
 record Con (cod : Set) : Set1 where
   field
-    dom  : List₁ Set
+    dom   : List₁ Set
 
   conArgs : Set1
   conArgs = HList dom
 
   field
-    con  : conArgs → cod
+    con   : conArgs → cod
 
 open Con
 
@@ -45,7 +46,11 @@ Realizes c x = Σ₁₀ (conArgs c) λ xs → con c xs ≡ x
 infixr 5 _∷_
 data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where 
   []  : All₁₂ P []
-  _∷_ : ∀ {x xs} → P x → All₁₂ P xs → All₁₂ P (x ∷ xs) 
+
+  _∷_ : ∀ {x xs}
+      → P x
+      → All₁₂ P      xs
+      → All₁₂ P (x ∷ xs) 
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
@@ -56,28 +61,28 @@ mutual
   Complete : {α : Set} → Data α → Set1
   Complete {α} data' = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ data' ×₁₁ Realizes c x)
 
-  codata ↓Data (α : Set) : Set2 where 
-    is-↓Data : (data'    : Data α)
+  codata ↓Data (cod : Set) : Set2 where 
+    is-↓Data : (data'    : Data cod)
              → (downward : Downward data')
              → (complete : Complete data')
-             → ↓Data α
+             → ↓Data cod
 
-infixr 7 _⇢_
+infixr 7 _⇾_
 data Type : Set → Set1 where
   #_  : (α : Set) → Type α
-  _⇢_ : (α : Set) {β : Set} → Type β → Type (α → β)
+  _⇾_ : (α : Set) {β : Set} → Type β → Type (α → β)
 
 argTys : {α : Set} → Type α → List₁ Set
 argTys (# _)   = []
-argTys (α ⇢ β) = α ∷ argTys β
+argTys (α ⇾ β) = α ∷ argTys β
 
 baseTy : {α : Set} → Type α → Set
 baseTy (# α)   = α
-baseTy (α ⇢ β) = baseTy β
+baseTy (α ⇾ β) = baseTy β
 
 apply : {α : Set} {α' : Type α} → α → HList (argTys α') → baseTy α'
 apply {α' = # α}   f []       = f
-apply {α' = α ⇢ β} f (x ∷ xs) = apply (f x) xs
+apply {α' = α ⇾ β} f (x ∷ xs) = apply (f x) xs
 
 infix 6 _∶_
 _∶_ : {α : Set} (c : α) (α' : Type α) → Con (baseTy α')
@@ -102,7 +107,7 @@ _∶_ c α' = record { dom = argTys α'; con = apply c }
 ℕ-↓Data ~ is-↓Data data' downward complete
   where
     data' = zero ∶ # ℕ
-          ∷ suc  ∶ ℕ ⇢ # ℕ
+          ∷ suc  ∶ ℕ ⇾ # ℕ
           ∷ []
 
     downward : Downward data'
@@ -115,7 +120,7 @@ _∶_ c α' = record { dom = argTys α'; con = apply c }
                      , here
                      , []
                      , ≡-refl
-    complete (suc n) = suc  ∶ ℕ ⇢ # ℕ
+    complete (suc n) = suc  ∶ ℕ ⇾ # ℕ
                      , there here
                      , n ∷ []
                      , ≡-refl
@@ -125,7 +130,7 @@ _∶_ c α' = record { dom = argTys α'; con = apply c }
   where
     pair = _,_
 
-    data' = pair ∶ ℕ ⇢ ℕ ⇢ # (ℕ × ℕ)
+    data' = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
           ∷ []
 
     downward : Downward data'
@@ -133,7 +138,7 @@ _∶_ c α' = record { dom = argTys α'; con = apply c }
              ∷ []
 
     complete : Complete data'
-    complete ( n₁ , n₂ ) = pair ∶ ℕ ⇢ ℕ ⇢ # (ℕ × ℕ)
+    complete ( n₁ , n₂ ) = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
                          , here
                          , n₁ ∷ n₂ ∷ []
                          , ≡-refl
@@ -146,7 +151,7 @@ Trees-↓Data : ↓Data Tree
 Trees-↓Data ~ is-↓Data data' downward complete
   where
 
-    data' = Branch ∶ Tree ⇢ ℕ ⇢ Tree ⇢ # Tree
+    data' = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
           ∷ Leaf   ∶ # Tree
           ∷ []
 
@@ -156,7 +161,7 @@ Trees-↓Data ~ is-↓Data data' downward complete
              ∷ []
 
     complete : Complete data'
-    complete (Branch l x r) = Branch ∶ Tree ⇢ ℕ ⇢ Tree ⇢ # Tree
+    complete (Branch l x r) = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
                             , here
                             , l ∷ x ∷ r ∷ []
                             , ≡-refl
