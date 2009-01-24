@@ -12,8 +12,8 @@ data HList : List₁ Set → Set1 where
   []  : HList []
 
   _∷_ : {α : Set} {Δ : List₁ Set}
-      → (x : α)
-      → HList Δ
+      → (x  : α)
+      → (xs : HList Δ)
       → HList (α ∷ Δ)
 
 infix 4 _∈_
