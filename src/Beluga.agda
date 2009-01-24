@@ -28,11 +28,11 @@ record Con (cod : Set) : Set1 where
   field
     dom  : List₁ Set
 
-  conArgs : Set1
-  conArgs = HList dom
+  hdom : Set1
+  hdom = HList dom
 
   field
-    con  : conArgs → cod
+    con  : hdom → cod
 
 open Con
 
@@ -40,7 +40,7 @@ Data : Set → Set1
 Data α = List₁ (Con α)
 
 Realizes : {α : Set} → Con α → α → Set1
-Realizes c x = Σ₁₀ (conArgs c) λ xs → con c xs ≡ x
+Realizes c x = Σ₁₀ (hdom c) λ xs → con c xs ≡ x
 
 infixr 5 _∷_
 data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where 
@@ -67,21 +67,21 @@ data Type : Set → Set1 where
   #_  : (α : Set) → Type α
   _⇢_ : (α : Set) {β : Set} → Type β → Type (α → β)
 
-argTys : {α : Set} → Type α → List₁ Set
-argTys (# _)   = []
-argTys (α ⇢ β) = α ∷ argTys β
+arg-ts : {α : Set} → Type α → List₁ Set
+arg-ts (# _)   = []
+arg-ts (α ⇢ β) = α ∷ arg-ts β
 
-baseTy : {α : Set} → Type α → Set
-baseTy (# α)   = α
-baseTy (α ⇢ β) = baseTy β
+base-t : {α : Set} → Type α → Set
+base-t (# α)   = α
+base-t (α ⇢ β) = base-t β
 
-apply : {α : Set} {α' : Type α} → α → HList (argTys α') → baseTy α'
+apply : {α : Set} {α' : Type α} → α → HList (arg-ts α') → base-t α'
 apply {α' = # α}   f []       = f
 apply {α' = α ⇢ β} f (x ∷ xs) = apply (f x) xs
 
 infix 6 _∶_
-_∶_ : {α : Set} (c : α) (α' : Type α) → Con (baseTy α')
-_∶_ c α' = record { dom = argTys α'; con = apply c }
+_∶_ : {α : Set} (c : α) (α' : Type α) → Con (base-t α')
+_∶_ c α' = record { dom = arg-ts α'; con = apply c }
 
 ⊤-↓Data : ↓Data ⊤
 ⊤-↓Data = is-↓Data data' downward complete
