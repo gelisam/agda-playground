@@ -39,8 +39,8 @@ open Con
 Data : Set → Set1
 Data α = List₁ (Con α)
 
-Realizer : {α : Set} → Con α → α → Set1
-Realizer c x = Σ₁₀ (conArgs c) λ xs → con c xs ≡ x
+Realizes : {α : Set} → Con α → α → Set1
+Realizes c x = Σ₁₀ (conArgs c) λ xs → con c xs ≡ x
 
 infixr 5 _∷_
 data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where 
@@ -54,7 +54,7 @@ mutual
   Downward data' = All₁₂ (λ c → All₁₂ ↓Data (dom c)) data'
 
   Complete : {α : Set} → Data α → Set1
-  Complete {α} data' = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ data' ×₁₁ Realizer c x)
+  Complete {α} data' = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ data' ×₁₁ Realizes c x)
 
   codata ↓Data (α : Set) : Set2 where 
     is-↓Data : (data'    : Data α)
