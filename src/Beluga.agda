@@ -48,7 +48,7 @@ data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where
   _∷_ : ∀ {x xs} → P x → All₁₂ P xs → All₁₂ P (x ∷ xs) 
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
--- this way (yet)...
+-- coinductively as far as productivity checking goes, AFAICT
 mutual
   Downward : {α : Set} → Data α → Set2
   Downward data' = All₁₂ (λ c → All₁₂ ↓Data (dom c)) data'
