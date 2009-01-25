@@ -2,4 +2,6 @@
 .DS_Store
 .*.agda.el
 *.agdai
-
+Makefile
+agda
+src/find_deps.rb
