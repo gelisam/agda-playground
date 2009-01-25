@@ -101,7 +101,7 @@ _∶_ c α' = record { dom = arg-ts α'; con = apply c }
     complete tt = tt ∶ # ⊤
                 , here
                 , []
-                , ≡-refl
+                , refl
 
 ℕ-↓Data : ↓Data ℕ
 ℕ-↓Data ~ is-↓Data data' downward complete
@@ -119,11 +119,11 @@ _∶_ c α' = record { dom = arg-ts α'; con = apply c }
     complete zero    = zero ∶ # ℕ
                      , here
                      , []
-                     , ≡-refl
+                     , refl
     complete (suc n) = suc  ∶ ℕ ⇾ # ℕ
                      , there here
                      , n ∷ []
-                     , ≡-refl
+                     , refl
 
 ×-↓Data : ↓Data (ℕ × ℕ)
 ×-↓Data ~ is-↓Data data' downward complete
@@ -141,7 +141,7 @@ _∶_ c α' = record { dom = arg-ts α'; con = apply c }
     complete ( n₁ , n₂ ) = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
                          , here
                          , n₁ ∷ n₂ ∷ []
-                         , ≡-refl
+                         , refl
 
 data Tree : Set where
   Branch : Tree → ℕ → Tree → Tree
@@ -164,11 +164,11 @@ Trees-↓Data ~ is-↓Data data' downward complete
     complete (Branch l x r) = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
                             , here
                             , l ∷ x ∷ r ∷ []
-                            , ≡-refl
+                            , refl
     complete Leaf           = Leaf ∶ # Tree
                             , there here
                             , []
-                            , ≡-refl
+                            , refl
 
 -- data Pattern {A : Set} : Deconstructible↓ A → Set2 where
 --   var : {fs : List₁ (Con A)}
