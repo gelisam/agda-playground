@@ -2,28 +2,15 @@ module Beluga where
 
 open import Data.Function hiding (_∶_)
 open import Data.List1
+open import Data.List1.In
+open import Data.List1.All2
+open import Data.HList
 open import Data.Nat
 open import Data.Product
 open import Data.Product1
+open import Data.Product1.Times
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
-
-data HList : List₁ Set → Set1 where
-  []  : HList []
-
-  _∷_ : {α : Set} {Δ : List₁ Set}
-      → (x  : α)
-      → (xs : HList Δ)
-      → HList (α ∷ Δ)
-
-infix 4 _∈_
-data _∈_ {α : Set1} : α → List₁ α → Set1 where
-  here  : ∀ {x}   {xs : List₁ α}                 → x ∈ x ∷ xs
-  there : ∀ {x y} {xs : List₁ α} (x∈xs : x ∈ xs) → x ∈ y ∷ xs
-
-infixr 2 _×₁₁_
-_×₁₁_ : Set1 → Set1 → Set1
-α ×₁₁ β = Σ₁₁ α (λ _ → β)
 
 record Con (cod : Set) : Set1 where
   field
@@ -42,15 +29,6 @@ DDecl α = List₁ (Con α)
 
 Realizes : {α : Set} → Con α → α → Set1
 Realizes c x = Σ₁₀ (hdom c) λ xs → con c xs ≡ x
-
-infixr 5 _∷_
-data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where 
-  []  : All₁₂ P []
-
-  _∷_ : ∀ {x xs}
-      → P x
-      → All₁₂ P      xs
-      → All₁₂ P (x ∷ xs) 
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
