@@ -72,21 +72,21 @@ data Type : Set → Set1 where
   #_  : (α : Set) → Type α
   _⇾_ : (α : Set) {β : Set} → Type β → Type (α → β)
 
-arg-ts : {α : Set} → Type α → List₁ Set
-arg-ts (# _)   = []
-arg-ts (α ⇾ β) = α ∷ arg-ts β
+arg-t : {α : Set} → Type α → List₁ Set
+arg-t (# _)   = []
+arg-t (α ⇾ β) = α ∷ arg-t β
 
-base-t : {α : Set} → Type α → Set
-base-t (# α)   = α
-base-t (α ⇾ β) = base-t β
+ret-t : {α : Set} → Type α → Set
+ret-t (# α)   = α
+ret-t (α ⇾ β) = ret-t β
 
-apply : {α : Set} {α' : Type α} → α → HList (arg-ts α') → base-t α'
+apply : {α : Set} {α' : Type α} → α → HList (arg-t α') → ret-t α'
 apply {α' = # α}   f []       = f
 apply {α' = α ⇾ β} f (x ∷ xs) = apply (f x) xs
 
 infix 6 _∶_
-_∶_ : {α : Set} (c : α) (α' : Type α) → Con (base-t α')
-_∶_ c α' = record { dom = arg-ts α'; con = apply c }
+_∶_ : {α : Set} (c : α) (α' : Type α) → Con (ret-t α')
+_∶_ c α' = record { dom = arg-t α'; con = apply c }
 
 ⊤-↓Data : ↓Data ⊤
 ⊤-↓Data = is-↓Data data' downward complete
