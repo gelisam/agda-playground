@@ -37,8 +37,8 @@ record Con (cod : Set) : Set1 where
 
 open Con
 
-Data : Set → Set1
-Data α = List₁ (Con α)
+DDecl : Set → Set1
+DDecl α = List₁ (Con α)
 
 Realizes : {α : Set} → Con α → α → Set1
 Realizes c x = Σ₁₀ (hdom c) λ xs → con c xs ≡ x
@@ -55,17 +55,17 @@ data All₁₂ {α : Set1} (P : α → Set2) : List₁ α → Set2 where
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
 mutual
-  Downward : {α : Set} → Data α → Set2
-  Downward data' = All₁₂ (λ c → All₁₂ ↓Data (dom c)) data'
+  Downward : {α : Set} → DDecl α → Set2
+  Downward ddecl = All₁₂ (λ c → All₁₂ ↓DDecl (dom c)) ddecl
 
-  Complete : {α : Set} → Data α → Set1
-  Complete {α} data' = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ data' ×₁₁ Realizes c x)
+  Complete : {α : Set} → DDecl α → Set1
+  Complete {α} ddecl = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ ddecl ×₁₁ Realizes c x)
 
-  codata ↓Data (cod : Set) : Set2 where 
-    is-↓Data : (data'    : Data cod)
-             → (downward : Downward data')
-             → (complete : Complete data')
-             → ↓Data cod
+  codata ↓DDecl (cod : Set) : Set2 where
+    is-↓DDecl : (ddecl    : DDecl cod)
+              → (downward : Downward ddecl)
+              → (complete : Complete ddecl)
+              → ↓DDecl cod
 
 infixr 7 _⇾_
 data Type : Set → Set1 where
@@ -88,34 +88,34 @@ infix 6 _∶_
 _∶_ : {α : Set} (c : α) (α' : Type α) → Con (ret-t α')
 _∶_ c α' = record { dom = arg-t α'; con = apply c }
 
-⊤-↓Data : ↓Data ⊤
-⊤-↓Data = is-↓Data data' downward complete
+⊤-↓DDecl : ↓DDecl ⊤
+⊤-↓DDecl = is-↓DDecl ddecl downward complete
   where
-    data' = tt ∶ # ⊤
+    ddecl = tt ∶ # ⊤
           ∷ []
 
-    downward : Downward data'
+    downward : Downward ddecl
     downward = [] ∷ []
 
-    complete : Complete data'
+    complete : Complete ddecl
     complete tt = tt ∶ # ⊤
                 , here
                 , []
                 , refl
 
-ℕ-↓Data : ↓Data ℕ
-ℕ-↓Data ~ is-↓Data data' downward complete
+ℕ-↓DDecl : ↓DDecl ℕ
+ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
-    data' = zero ∶ # ℕ
+    ddecl = zero ∶ # ℕ
           ∷ suc  ∶ ℕ ⇾ # ℕ
           ∷ []
 
-    downward : Downward data'
+    downward : Downward ddecl
     downward = []
-             ∷ (ℕ-↓Data ∷ [])
+             ∷ (ℕ-↓DDecl ∷ [])
              ∷ []
 
-    complete : Complete data'
+    complete : Complete ddecl
     complete zero    = zero ∶ # ℕ
                      , here
                      , []
@@ -125,19 +125,19 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
                      , n ∷ []
                      , refl
 
-×-↓Data : ↓Data (ℕ × ℕ)
-×-↓Data ~ is-↓Data data' downward complete
+×-↓DDecl : ↓DDecl (ℕ × ℕ)
+×-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
     pair = _,_
 
-    data' = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
+    ddecl = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
           ∷ []
 
-    downward : Downward data'
-    downward = (ℕ-↓Data ∷ ℕ-↓Data ∷ [])
+    downward : Downward ddecl
+    downward = (ℕ-↓DDecl ∷ ℕ-↓DDecl ∷ [])
              ∷ []
 
-    complete : Complete data'
+    complete : Complete ddecl
     complete ( n₁ , n₂ ) = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
                          , here
                          , n₁ ∷ n₂ ∷ []
@@ -147,20 +147,20 @@ data Tree : Set where
   Branch : Tree → ℕ → Tree → Tree
   Leaf   : Tree
 
-Trees-↓Data : ↓Data Tree
-Trees-↓Data ~ is-↓Data data' downward complete
+Trees-↓DDecl : ↓DDecl Tree
+Trees-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
 
-    data' = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
+    ddecl = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
           ∷ Leaf   ∶ # Tree
           ∷ []
 
-    downward : Downward data'
-    downward = (Trees-↓Data ∷ ℕ-↓Data ∷ Trees-↓Data ∷ [])
+    downward : Downward ddecl
+    downward = (Trees-↓DDecl ∷ ℕ-↓DDecl ∷ Trees-↓DDecl ∷ [])
              ∷ []
              ∷ []
 
-    complete : Complete data'
+    complete : Complete ddecl
     complete (Branch l x r) = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
                             , here
                             , l ∷ x ∷ r ∷ []
