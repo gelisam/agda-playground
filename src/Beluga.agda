@@ -9,6 +9,7 @@ open import Data.Nat
 open import Data.Product
 open import Data.Product1
 open import Data.Product1.Times
+open import Data.Product1.Exists
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
@@ -28,7 +29,7 @@ DDecl : Set → Set1
 DDecl α = List₁ (Con α)
 
 Realizes : {α : Set} → Con α → α → Set1
-Realizes c x = Σ₁₀ (hdom c) λ xs → con c xs ≡ x
+Realizes c x = ∃₁₀ λ xs → con c xs ≡ x
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
@@ -37,7 +38,7 @@ mutual
   Downward ddecl = All₁₂ (λ c → All₁₂ ↓DDecl (dom c)) ddecl
 
   Complete : {α : Set} → DDecl α → Set1
-  Complete {α} ddecl = (x : α) → Σ₁₁ (Con α) (λ c → c ∈ ddecl ×₁₁ Realizes c x)
+  Complete {α} ddecl = (x : α) → ∃₁₁ λ c → c ∈ ddecl ×₁₁ Realizes c x
 
   codata ↓DDecl (cod : Set) : Set2 where
     is-↓DDecl : (ddecl    : DDecl cod)
