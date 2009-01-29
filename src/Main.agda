@@ -3,6 +3,7 @@ module Main where
 
 data ⊥ : Set where
 
+-- also try with "codata": it yields exactly the same contradiction.
 data Curry↯ : Set where
   ⌈_⌉ : (Curry↯ → ⊥) → Curry↯
 
