@@ -1,4 +1,4 @@
-{- LOOKMANO --no-positivity-check -}
+{-# OPTIONS --no-positivity-check #-}
 module Main where
 
 data ⊥ : Set where
