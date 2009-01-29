@@ -1,7 +1,7 @@
 {-# OPTIONS --no-positivity-check #-}
 module Main where
 
-data ⊥ : Set where
+open import Data.Empty
 
 -- also try with "codata": it yields exactly the same contradiction.
 data Curry↯ : Set where
