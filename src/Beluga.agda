@@ -28,8 +28,8 @@ open Con
 DDecl : Set → Set1
 DDecl α = List₁ (Con α)
 
-Realizes : {α : Set} → Con α → α → Set1
-Realizes c x = ∃₁₀ λ xs → con c xs ≡ x
+Surjective : {α : Set} → Con α → α → Set1
+Surjective c y = ∃₁₀ λ xs → con c xs ≡ y
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
@@ -38,7 +38,7 @@ mutual
   Downward ddecl = All₁₂ (λ c → All₁₂ ↓DDecl (dom c)) ddecl
 
   Complete : {α : Set} → DDecl α → Set1
-  Complete {α} ddecl = (x : α) → ∃₁₁ λ c → c ∈ ddecl ×₁₁ Realizes c x
+  Complete {α} ddecl = ∀ y → ∃₁₁ λ c → c ∈ ddecl ×₁₁ Surjective c y
 
   codata ↓DDecl (cod : Set) : Set2 where
     is-↓DDecl : (ddecl    : DDecl cod)
