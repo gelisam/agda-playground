@@ -14,8 +14,8 @@ data Curry↯ : Set where
 -- δ f = f f
 -- ω = δ δ
 
--- the curry paradox (C = C → ⊥) can be written in the same form.
--- ⌈_⌉ and ⌊_⌋ convert between C and C → ⊥
+-- Curry's paradox (also known as Löb's paradox) (C = C → ⊥) can be
+-- written in the same form.  ⌈_⌉ and ⌊_⌋ convert between C and C → ⊥
 δ : Curry↯ → ⊥
 δ ⌈ f ⌉ = f ⌈ f ⌉
 ω : ⊥
