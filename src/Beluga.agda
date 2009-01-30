@@ -83,10 +83,26 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
     downward = [] ∷ []
 
     complete : Complete ddecl
-    complete tt = (tt ∶ # ⊤
+    complete tt = (_
                   , here
                   , [])
                 , refl
+
+phony-ℕ-↓DDecl : ↓DDecl ℕ
+phony-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
+  where
+    ddecl = id ∶ ℕ ⇾ # ℕ
+          ∷ []
+
+    downward : Downward ddecl
+    downward = (phony-ℕ-↓DDecl ∷ [])
+             ∷ []
+
+    complete : Complete ddecl
+    complete n = _
+               , here
+               , n ∷ []
+               , refl
 
 ℕ-↓DDecl : ↓DDecl ℕ
 ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
@@ -101,11 +117,11 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
              ∷ []
 
     complete : Complete ddecl
-    complete zero    = (zero ∶ # ℕ
+    complete zero    = (_
                        , here
                        , [])
                      , refl
-    complete (suc n) = (suc  ∶ ℕ ⇾ # ℕ
+    complete (suc n) = (_
                        , there here
                        , n ∷ [])
                      , refl
@@ -123,7 +139,7 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
              ∷ []
 
     complete : Complete ddecl
-    complete ( n₁ , n₂ ) = (pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
+    complete ( n₁ , n₂ ) = (_
                            , here
                            , n₁ ∷ n₂ ∷ [])
                          , refl
@@ -146,11 +162,11 @@ Trees-↓DDecl ~ is-↓DDecl ddecl downward complete
              ∷ []
 
     complete : Complete ddecl
-    complete (Branch l x r) = (Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
+    complete (Branch l x r) = (_
                               , here
                               , l ∷ x ∷ r ∷ [])
                             , refl
-    complete Leaf           = (Leaf ∶ # Tree
+    complete Leaf           = (_
                               , there here
                               , [])
                             , refl
