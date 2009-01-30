@@ -29,9 +29,6 @@ open Con
 DDecl : Set → Set1
 DDecl α = List₁ (Con α)
 
-Realizes : {α : Set} → Con α → α → Set1
-Realizes c x = ∃₁₀ λ xs → con c xs ≡ x
-
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
 mutual
