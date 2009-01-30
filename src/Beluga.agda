@@ -128,38 +128,38 @@ pat-z-s-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
                        , n ∷ [])
                      , refl
 
-×-↓DDecl : ↓DDecl (ℕ × ℕ)
-×-↓DDecl ~ is-↓DDecl ddecl downward complete
+×-↓DDecl : {α β : Set} → ↓DDecl α → ↓DDecl β → ↓DDecl (α × β)
+×-↓DDecl {α} {β} ↓α ↓β ~ is-↓DDecl ddecl downward complete
   where
     pair = _,_
 
-    ddecl = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
+    ddecl = pair ∶ α ⇾ β ⇾ # (α × β)
           ∷ []
 
     downward : Downward ddecl
-    downward = (ℕ-↓DDecl ∷ ℕ-↓DDecl ∷ [])
+    downward = (↓α ∷ ↓β ∷ [])
              ∷ []
 
     complete : Complete ddecl
-    complete ( n₁ , n₂ ) = (_
-                           , here
-                           , n₁ ∷ n₂ ∷ [])
+    complete ( a , b ) = (_
+                         , here
+                         , a ∷ b ∷ [])
                          , refl
 
-data Tree : Set where
-  Branch : Tree → ℕ → Tree → Tree
-  Leaf   : Tree
+data Tree (α : Set) : Set where
+  Branch : Tree α → α → Tree α → Tree α
+  Leaf   : Tree α
 
-Trees-↓DDecl : ↓DDecl Tree
-Trees-↓DDecl ~ is-↓DDecl ddecl downward complete
+Tree-↓DDecl : {α : Set} -> ↓DDecl α → ↓DDecl (Tree α)
+Tree-↓DDecl {α} ↓α ~ is-↓DDecl ddecl downward complete
   where
 
-    ddecl = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
-          ∷ Leaf   ∶ # Tree
+    ddecl = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ # Tree α
+          ∷ Leaf   ∶ # Tree α
           ∷ []
 
     downward : Downward ddecl
-    downward = (Trees-↓DDecl ∷ ℕ-↓DDecl ∷ Trees-↓DDecl ∷ [])
+    downward = (Tree-↓DDecl ↓α ∷ ↓α ∷ Tree-↓DDecl ↓α ∷ [])
              ∷ []
              ∷ []
 
