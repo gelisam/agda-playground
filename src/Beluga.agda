@@ -85,24 +85,29 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
                   , [])
                 , refl
 
-phony-ℕ-↓DDecl : ↓DDecl ℕ
-phony-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
+-- case n : ℕ of
+--   box(. U[.]) ⇒ ...
+pat-U-ℕ-↓DDecl : ↓DDecl ℕ
+pat-U-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
     ddecl = id ∶ ℕ ⇾ # ℕ
           ∷ []
 
     downward : Downward ddecl
-    downward = (phony-ℕ-↓DDecl ∷ [])
+    downward = (pat-U-ℕ-↓DDecl ∷ [])
              ∷ []
 
     complete : Complete ddecl
-    complete n = _
-               , here
-               , n ∷ []
+    complete n = (_
+                 , here
+                 , n ∷ [])
                , refl
 
-ℕ-↓DDecl : ↓DDecl ℕ
-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
+-- case n : ℕ of
+--   box(. zero) ⇒ ...
+--   box(. suc U[.]) ⇒ ...
+pat-z-s-ℕ-↓DDecl : ↓DDecl ℕ
+pat-z-s-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
     ddecl = zero ∶ # ℕ
           ∷ suc  ∶ ℕ ⇾ # ℕ
@@ -110,7 +115,7 @@ phony-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
 
     downward : Downward ddecl
     downward = []
-             ∷ (ℕ-↓DDecl ∷ [])
+             ∷ (pat-z-s-ℕ-↓DDecl ∷ [])
              ∷ []
 
     complete : Complete ddecl
@@ -167,13 +172,3 @@ Trees-↓DDecl ~ is-↓DDecl ddecl downward complete
                               , there here
                               , [])
                             , refl
-
--- data Pattern {A : Set} : Deconstructible↓ A → Set2 where
---   var : {fs : List₁ (Con A)}
---       → {all : All₁₂ (λ f → Deconstructible↓ (dom f)) fs}
---       → {exh : ((x : A) → Σ₁₁ (Con A) (λ f → f ∈ fs ×₁₀ CanConstruct f x))}
---       → (f : Con A) → f ∈ fs → Pattern (deconstructible fs all exh)
---   var : {fs : List₁ (Con A)}
---       → {all : All₁₂ (λ f → Deconstructible↓ (dom f)) fs}
---       → {exh : ((x : A) → Σ₁₁ (Con A) (λ f → f ∈ fs ×₁₀ CanConstruct f x))}
---       → (f : Con A) → f ∈ fs → Pattern (deconstructible fs all exh)
