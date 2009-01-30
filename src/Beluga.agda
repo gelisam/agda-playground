@@ -14,17 +14,20 @@ open import Data.Unit
 open import Relation.Unary.Surjective1
 open import Relation.Binary.PropositionalEquality
 
-record Con (cod : Set) : Set1 where
-  field
-    dom   : List₁ Set
+Fun : List₁ Set → Set → Set1
+Fun αs β = HList αs → β
 
-  hdom : Set1
-  hdom = HList dom
+Con : Set → Set1
+Con β = ∃₁₁ λ αs → Fun αs β
 
-  field
-    con  : hdom → cod
+dom : {α : Set} → Con α → List₁ Set
+dom p = proj₁₁₁ p
 
-open Con
+hdom : {α : Set} → Con α → Set1
+hdom p = HList (dom p)
+
+con : {α : Set} → (p : Con α) → hdom p → α
+con {α} p αs = (proj₁₁₂ p) αs
 
 DDecl : Set → Set1
 DDecl α = List₁ (Con α)
@@ -68,7 +71,7 @@ apply {α' = α ⇾ β} f (x ∷ xs) = apply (f x) xs
 
 infix 6 _∶_
 _∶_ : {α : Set} (c : α) (α' : Type α) → Con (ret-t α')
-_∶_ c α' = record { dom = arg-t α'; con = apply c }
+_∶_ c α' = arg-t α' , apply c
 
 ⊤-↓DDecl : ↓DDecl ⊤
 ⊤-↓DDecl = is-↓DDecl ddecl downward complete
