@@ -17,33 +17,39 @@ open import Relation.Binary.PropositionalEquality
 Fun : List₁ Set → Set → Set1
 Fun αs β = HList αs → β
 
-Con : Set → Set1
-Con β = ∃₁₁ λ αs → Fun αs β
+fun-apply : {αs : List₁ Set}{β : Set}
+          → Fun αs β
+          → HList αs
+          → β
+fun-apply f xs = f xs
 
-dom : {α : Set} → Con α → List₁ Set
-dom p = proj₁₁₁ p
+Pat : Set → Set1
+Pat β = ∃₁₁ λ αs → Fun αs β
 
-hdom : {α : Set} → Con α → Set1
-hdom p = HList (dom p)
+pat-dom : {α : Set} → Pat α → List₁ Set
+pat-dom p = proj₁₁₁ p
 
-con : {α : Set} → (p : Con α) → hdom p → α
-con {α} p αs = (proj₁₁₂ p) αs
+pat-apply : {α : Set}
+          → (p : Pat α)
+          → HList (pat-dom p)
+          → α
+pat-apply p xs = fun-apply (proj₁₁₂ p) xs
 
 DDecl : Set → Set1
-DDecl α = List₁ (Con α)
+DDecl α = List₁ (Pat α)
 
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
 mutual
   Downward : {α : Set} → DDecl α → Set2
-  Downward ddecl = All₁₂ (λ c → All₁₂ ↓DDecl (dom c)) ddecl
+  Downward ddecl = All₁₂ (λ p → All₁₂ ↓DDecl (pat-dom p)) ddecl
 
   Complete : {α : Set} → DDecl α → Set1
   Complete {α} ddecl = Surjective₁₀ construct where
-    construct : (∃₁₁ λ c → c ∈ ddecl ×₁₁ hdom c) → α
-    construct c,∈,xs = con c xs where
-      c = proj₁₁₁ c,∈,xs
-      ∈,xs = proj₁₁₂ c,∈,xs
+    construct : (∃₁₁ λ p → p ∈ ddecl ×₁₁ HList (pat-dom p)) → α
+    construct p,∈,xs = pat-apply p xs where
+      p = proj₁₁₁ p,∈,xs
+      ∈,xs = proj₁₁₂ p,∈,xs
       xs = proj₁₁₂ ∈,xs
 
   codata ↓DDecl (cod : Set) : Set2 where
@@ -70,8 +76,8 @@ apply {α' = # α}   f []       = f
 apply {α' = α ⇾ β} f (x ∷ xs) = apply (f x) xs
 
 infix 6 _∶_
-_∶_ : {α : Set} (c : α) (α' : Type α) → Con (ret-t α')
-_∶_ c α' = arg-t α' , apply c
+_∶_ : {α : Set} (p : α) (α' : Type α) → Pat (ret-t α')
+_∶_ p α' = arg-t α' , apply p
 
 ⊤-↓DDecl : ↓DDecl ⊤
 ⊤-↓DDecl = is-↓DDecl ddecl downward complete
