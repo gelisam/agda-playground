@@ -1,7 +1,6 @@
 module Main where
 open import Data.List1
 open import Data.List1.In
-open import Data.List1.All2
 open import Data.HList
 open import Data.Product1
 open import Data.Pat
