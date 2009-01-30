@@ -4,8 +4,10 @@ open import Data.List1.In
 open import Data.List1.All2
 open import Data.HList
 open import Data.Product1
+open import Data.Pat
+open import Data.Pat.Helper
+open import Data.Pat.Cover
 open import Relation.Binary.PropositionalEquality
-open import Beluga
 
 open import Data.Unit
 open import Data.Nat
