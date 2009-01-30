@@ -17,22 +17,13 @@ Case α = List₁ (Pat α)
 -- This should really be a (co?)record, but Agda2 doesn't treat records
 -- coinductively as far as productivity checking goes, AFAICT
 mutual
-  Downward : {α : Set} → Case α → Set2
-  Downward case = All₁₂ (λ p → All₁₂ Cover (pat-dom p)) case
-
-  Complete : {α : Set} → Case α → Set1
-  Complete {α} case = Surjective₁₀ construct where
+  Cover : {α : Set} → Case α → Set1
+  Cover {α} case = Surjective₁₀ construct where
     construct : (∃₁₁ λ p → p ∈ case ×₁₁ HList (pat-dom p)) → α
     construct p,∈,xs = pat-apply p xs where
       p = proj₁₁₁ p,∈,xs
       ∈,xs = proj₁₁₂ p,∈,xs
       xs = proj₁₁₂ ∈,xs
-
-  codata Cover (cod : Set) : Set2 where
-    covers : (case     : Case cod)
-           → (downward : Downward case)
-           → (complete : Complete case)
-           → Cover cod
 
 infixr 7 _⇾_
 data Type : Set → Set1 where
