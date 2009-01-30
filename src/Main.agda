@@ -2,11 +2,10 @@ module Main where
 open import Data.Fin
 open import Data.Vec1
 open import Data.HList
-open import Data.Product1
+open import Data.Fun.Type
 open import Data.Pat
 open import Data.Pat.Helper
 open import Data.Pat.Cover
-open import Relation.Binary.PropositionalEquality
 
 
 open import Data.Unit
@@ -18,7 +17,7 @@ case-⊤ = tt ∶ ⊤ $
        ∷ []
 
 cover-⊤ : Cover case-⊤
-cover-⊤ tt = cover-with (# 0) []
+cover-⊤ tt = cover-with case-⊤ (# 0)
 
 
 open import Data.Function hiding (_∶_)
@@ -30,7 +29,7 @@ case-U α = id ∶ α ⇾ α $
          ∷ []
 
 cover-U : ∀ α → Cover (case-U α)
-cover-U α x = cover-with (# 0) (x ∷ [])
+cover-U α x = cover-with (case-U α) (# 0) x
 
 
 open import Data.Nat
@@ -44,8 +43,8 @@ case-z-s = zero ∶ ℕ $
          ∷ []
 
 cover-z-s : Cover case-z-s
-cover-z-s zero    = cover-with (# 0) []
-cover-z-s (suc n) = cover-with (# 1) (n ∷ [])
+cover-z-s zero    = cover-with case-z-s (# 0)
+cover-z-s (suc n) = cover-with case-z-s (# 1) n
 
 
 open import Data.Tree
@@ -53,14 +52,14 @@ open import Data.Tree
 -- case t : Tree α of
 --   box(. Branch L[.] X[.] R[.]) ⇒ ...
 --   box(. Leaf) ⇒ ...
-case-branch-leaf : ∀ α → Case (Tree α) 2
-case-branch-leaf α = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ Tree α $
+case-B-L : ∀ α → Case (Tree α) 2
+case-B-L α = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ Tree α $
                    ∷ Leaf   ∶ Tree α $
                    ∷ []
 
-cover-branch-leaf : ∀ {α} → Cover (case-branch-leaf α)
-cover-branch-leaf (Branch l x r) = cover-with (# 0) (l ∷ x ∷ r ∷ [])
-cover-branch-leaf Leaf           = cover-with (# 1) []
+cover-B-L : ∀ α → Cover (case-B-L α)
+cover-B-L α (Branch l x r) = cover-with (case-B-L α) (# 0) l x r
+cover-B-L α Leaf           = cover-with (case-B-L α) (# 1)
 
 
 open import Data.Product
@@ -71,5 +70,5 @@ case-U,V : (α β : Set) → Case (α × β) 1
 case-U,V α β = _,_ ∶ α ⇾ β ⇾ (α × β) $
              ∷ []
 
-cover-U,V : ∀ {α β} → Cover (case-U,V α β)
-cover-U,V ( a , b ) = cover-with (# 0) (a ∷ b ∷ [])
+cover-U,V : ∀ α β → Cover (case-U,V α β)
+cover-U,V α β (a , b) = cover-with (case-U,V α β) (# 0) a b

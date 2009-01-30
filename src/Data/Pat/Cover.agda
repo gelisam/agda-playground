@@ -8,6 +8,8 @@ open import Data.Product1
 open import Data.Product1.Times
 open import Data.Product1.Exists
 open import Relation.Unary.Surjective1
+
+open import Data.HList.Forall1
 open import Relation.Binary.PropositionalEquality
 
 -- a list of pattern-matching attempts which might not cover all cases
@@ -31,8 +33,12 @@ Cover case = Surjective₁₀ (construct case)
 
 -- helper for implementing (Cover case)
 cover-with : ∀ {α n}
-           → {case : Case α (suc n)}
+           → (case : Case α (suc n))
            → (j : Fin (suc n))
-           → (xs : HList (pat-dom (lookup j case)))
-           → ∃₁₀ λ i,xs → construct case i,xs ≡ construct case (j , xs)
-cover-with j xs = (j , xs) , refl
+           → h∀₁ (pat-dom (lookup j case))
+             λ xs → ∃₁₀
+             λ i,xs →
+               construct case i,xs
+             ≡ construct case (j , xs)
+cover-with case j = hλ₁ (pat-dom (lookup j case))
+                    λ xs → (j , xs) , refl
