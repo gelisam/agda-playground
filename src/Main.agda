@@ -10,65 +10,65 @@ open import Data.Pat.Cover
 
 open import Data.Unit
 
--- case t : ⊤ of
+-- view t : ⊤ of
 --   box(. ⊤) ⇒ ...
-case-⊤ : Case ⊤ 1
-case-⊤ = tt ∶ ⊤ $
+view-⊤ : View ⊤ 1
+view-⊤ = tt ∶ ⊤ $
        ∷ []
 
-cover-⊤ : Cover case-⊤
-cover-⊤ tt = cover-with case-⊤ (# 0)
+cover-⊤ : Cover view-⊤
+cover-⊤ tt = cover-with view-⊤ (# 0)
 
 
 open import Data.Function hiding (_∶_)
 
--- case n : α of
+-- view n : α of
 --   box(. U[.]) ⇒ ...
-case-U : ∀ α → Case α 1
-case-U α = id ∶ α ⇾ α $
+view-U : ∀ α → View α 1
+view-U α = id ∶ α ⇾ α $
          ∷ []
 
-cover-U : ∀ α → Cover (case-U α)
-cover-U α x = cover-with (case-U α) (# 0) x
+cover-U : ∀ α → Cover (view-U α)
+cover-U α x = cover-with (view-U α) (# 0) x
 
 
 open import Data.Nat
 
--- case n : ℕ of
+-- view n : ℕ of
 --   box(. zero) ⇒ ...
 --   box(. suc U[.]) ⇒ ...
-case-z-s : Case ℕ 2
-case-z-s = zero ∶ ℕ $
+view-z-s : View ℕ 2
+view-z-s = zero ∶ ℕ $
          ∷ suc  ∶ ℕ ⇾ ℕ $
          ∷ []
 
-cover-z-s : Cover case-z-s
-cover-z-s zero    = cover-with case-z-s (# 0)
-cover-z-s (suc n) = cover-with case-z-s (# 1) n
+cover-z-s : Cover view-z-s
+cover-z-s zero    = cover-with view-z-s (# 0)
+cover-z-s (suc n) = cover-with view-z-s (# 1) n
 
 
 open import Data.Tree
 
--- case t : Tree α of
+-- view t : Tree α of
 --   box(. Branch L[.] X[.] R[.]) ⇒ ...
 --   box(. Leaf) ⇒ ...
-case-B-L : ∀ α → Case (Tree α) 2
-case-B-L α = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ Tree α $
+view-B-L : ∀ α → View (Tree α) 2
+view-B-L α = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ Tree α $
                    ∷ Leaf   ∶ Tree α $
                    ∷ []
 
-cover-B-L : ∀ α → Cover (case-B-L α)
-cover-B-L α (Branch l x r) = cover-with (case-B-L α) (# 0) l x r
-cover-B-L α Leaf           = cover-with (case-B-L α) (# 1)
+cover-B-L : ∀ α → Cover (view-B-L α)
+cover-B-L α (Branch l x r) = cover-with (view-B-L α) (# 0) l x r
+cover-B-L α Leaf           = cover-with (view-B-L α) (# 1)
 
 
 open import Data.Product
 
--- case p : α × β of
+-- view p : α × β of
 --   box(. U[.] , V[.]) ⇒ ...
-case-U,V : ∀ α β → Case (α × β) 1
-case-U,V α β = _,_ ∶ α ⇾ β ⇾ (α × β) $
+view-U,V : ∀ α β → View (α × β) 1
+view-U,V α β = _,_ ∶ α ⇾ β ⇾ (α × β) $
              ∷ []
 
-cover-U,V : ∀ α β → Cover (case-U,V α β)
-cover-U,V α β (a , b) = cover-with (case-U,V α β) (# 0) a b
+cover-U,V : ∀ α β → Cover (view-U,V α β)
+cover-U,V α β (a , b) = cover-with (view-U,V α β) (# 0) a b

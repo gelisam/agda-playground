@@ -12,33 +12,33 @@ open import Relation.Unary.Surjective1
 open import Data.HList.Forall1
 open import Relation.Binary.PropositionalEquality
 
--- a list of pattern-matching attempts which might not cover all cases
-Case : Set → ℕ → Set1
-Case α n = Vec₁ (Pat α) n
+-- a list of pattern-matching attempts which might not cover all views
+View : Set → ℕ → Set1
+View α n = Vec₁ (Pat α) n
 
 private
   construct : ∀ {α n}
-            → (case : Case α n)
-            → (∃₀₁ λ i → HList (pat-dom (lookup i case)))
+            → (view : View α n)
+            → (∃₀₁ λ i → HList (pat-dom (lookup i view)))
             → α
-  construct case i,xs = pat-apply p xs where
+  construct view i,xs = pat-apply p xs where
     i = proj₀₁₁ i,xs
-    p = lookup i case
+    p = lookup i view
     xs = proj₀₁₂ i,xs
   
--- a Case which does cover all cases
-Cover : ∀ {α n} → Case α n → Set1
-Cover case = Surjective₁₀ (construct case)
+-- a View which does cover all views
+Cover : ∀ {α n} → View α n → Set1
+Cover view = Surjective₁₀ (construct view)
 
 
--- helper for implementing (Cover case)
+-- helper for implementing (Cover view)
 cover-with : ∀ {α n}
-           → (case : Case α (suc n))
+           → (view : View α (suc n))
            → (j : Fin (suc n))
-           → l∀₁ (pat-dom (lookup j case))
+           → l∀₁ (pat-dom (lookup j view))
              λ xs → ∃₁₀
              λ i,xs →
-               construct case i,xs
-             ≡ construct case (j , xs)
-cover-with case j = lλ₁ (pat-dom (lookup j case))
+               construct view i,xs
+             ≡ construct view (j , xs)
+cover-with view j = lλ₁ (pat-dom (lookup j view))
                     λ xs → (j , xs) , refl
