@@ -82,6 +82,22 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
                 , []
                 , refl
 
+phony-ℕ-↓DDecl : ↓DDecl ℕ
+phony-ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
+  where
+    ddecl = id ∶ ℕ ⇾ # ℕ
+          ∷ []
+
+    downward : Downward ddecl
+    downward = (phony-ℕ-↓DDecl ∷ [])
+             ∷ []
+
+    complete : Complete ddecl
+    complete n = _
+               , here
+               , n ∷ []
+               , refl
+
 ℕ-↓DDecl : ↓DDecl ℕ
 ℕ-↓DDecl ~ is-↓DDecl ddecl downward complete
   where
