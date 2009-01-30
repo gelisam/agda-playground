@@ -14,9 +14,9 @@ Case : Set → ℕ → Set1
 Case α n = Vec₁ (Pat α) n
 
 private
-  construct : {α : Set}{n : ℕ}
+  construct : ∀ {α n}
             → (case : Case α n)
-            → (Σ₀₁ (Fin n) λ i → HList (pat-dom (lookup i case)))
+            → (∃₀₁ λ i → HList (pat-dom (lookup i case)))
             → α
   construct case i,xs = pat-apply p xs where
     i = proj₀₁₁ i,xs
@@ -24,5 +24,5 @@ private
     xs = proj₀₁₂ i,xs
   
 -- a Case which does cover all cases
-Cover : {α : Set}{n : ℕ} → Case α n → Set1
+Cover : ∀ {α n} → Case α n → Set1
 Cover case = Surjective₁₀ (construct case)

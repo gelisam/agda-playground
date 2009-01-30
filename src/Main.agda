@@ -25,11 +25,11 @@ open import Data.Function hiding (_∶_)
 
 -- case n : α of
 --   box(. U[.]) ⇒ ...
-case-U : (α : Set) → Case α 1
+case-U : ∀ α → Case α 1
 case-U α = id ∶ α ⇾ # α
          ∷ []
 
-cover-U : {α : Set} → Cover (case-U α)
+cover-U : ∀ {α} → Cover (case-U α)
 cover-U x = (zero , x ∷ []) , refl
 
 
@@ -53,12 +53,12 @@ open import Data.Tree
 -- case t : Tree α of
 --   box(. Branch L[.] X[.] R[.]) ⇒ ...
 --   box(. Leaf) ⇒ ...
-case-branch-leaf : (α : Set) → Case (Tree α) 2
+case-branch-leaf : ∀ α → Case (Tree α) 2
 case-branch-leaf α = Branch ∶ Tree α ⇾ α ⇾ Tree α ⇾ # Tree α
                    ∷ Leaf   ∶ # Tree α
                    ∷ []
 
-cover-branch-leaf : {α : Set} → Cover (case-branch-leaf α)
+cover-branch-leaf : ∀ {α} → Cover (case-branch-leaf α)
 cover-branch-leaf (Branch l x r) = (zero , l ∷ x ∷ r ∷ []) , refl
 cover-branch-leaf Leaf           = (suc zero , []) , refl
 
@@ -71,5 +71,5 @@ case-U,V : (α β : Set) → Case (α × β) 1
 case-U,V α β = _,_ ∶ α ⇾ β ⇾ # (α × β)
              ∷ []
 
-cover-U,V : {α β : Set} → Cover (case-U,V α β)
+cover-U,V : ∀ {α β} → Cover (case-U,V α β)
 cover-U,V ( a , b ) = (zero , a ∷ b ∷ []) , refl
