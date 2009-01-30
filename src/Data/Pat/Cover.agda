@@ -35,10 +35,10 @@ Cover case = Surjective₁₀ (construct case)
 cover-with : ∀ {α n}
            → (case : Case α (suc n))
            → (j : Fin (suc n))
-           → h∀₁ (pat-dom (lookup j case))
+           → l∀₁ (pat-dom (lookup j case))
              λ xs → ∃₁₀
              λ i,xs →
                construct case i,xs
              ≡ construct case (j , xs)
-cover-with case j = hλ₁ (pat-dom (lookup j case))
+cover-with case j = lλ₁ (pat-dom (lookup j case))
                     λ xs → (j , xs) , refl

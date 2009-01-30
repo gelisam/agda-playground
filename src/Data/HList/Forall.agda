@@ -2,16 +2,19 @@ module Data.HList.Forall where
 open import Data.List1
 open import Data.HList
 -- heterogenous ∀
--- foo : ∀h (α ∷ β ∷ []) λ αs → γ
+-- foo : l∀ (α ∷ β ∷ []) λ αs → γ
 -- foo : α → β → γ
--- foo = hλ λ hlist → ...
+-- foo = lλ λ hlist → ...
 
-h∀ : ∀ αs → (HList αs → Set) → Set
-h∀ []       f = f []
-h∀ (α ∷ αs) f = (x : α) → h∀ αs λ xs → f (x ∷ xs)
+l∀ : ∀ αs → (HList αs → Set) → Set
+l∀ []       f = f []
+l∀ (α ∷ αs) f = (x : α) → l∀ αs λ xs → f (x ∷ xs)
 
-hλ : ∀ αs {f}
+lλ : ∀ αs {f}
    → ((xs : HList αs) → f xs)
-   → h∀ αs f
-hλ []       f = f []
-hλ (α ∷ αs) f = λ x → hλ αs λ xs → f (x ∷ xs)
+   → l∀ αs f
+lλ []       f = f []
+lλ (α ∷ αs) f = λ x → lλ αs λ xs → f (x ∷ xs)
+
+_l→_ : List₁ Set → Set → Set
+_l→_ αs β = l∀ αs λ _ → β
