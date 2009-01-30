@@ -11,6 +11,7 @@ open import Data.Product1
 open import Data.Product1.Times
 open import Data.Product1.Exists
 open import Data.Unit
+open import Relation.Unary.Surjective1
 open import Relation.Binary.PropositionalEquality
 
 record Con (cod : Set) : Set1 where
@@ -38,7 +39,12 @@ mutual
   Downward ddecl = All₁₂ (λ c → All₁₂ ↓DDecl (dom c)) ddecl
 
   Complete : {α : Set} → DDecl α → Set1
-  Complete {α} ddecl = (x : α) → ∃₁₁ λ c → c ∈ ddecl ×₁₁ Realizes c x
+  Complete {α} ddecl = Surjective₁₀ construct where
+    construct : (∃₁₁ λ c → c ∈ ddecl ×₁₁ hdom c) → α
+    construct c,∈,xs = con c xs where
+      c = proj₁₁₁ c,∈,xs
+      ∈,xs = proj₁₁₂ c,∈,xs
+      xs = proj₁₁₂ ∈,xs
 
   codata ↓DDecl (cod : Set) : Set2 where
     is-↓DDecl : (ddecl    : DDecl cod)
@@ -77,9 +83,9 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
     downward = [] ∷ []
 
     complete : Complete ddecl
-    complete tt = tt ∶ # ⊤
-                , here
-                , []
+    complete tt = (tt ∶ # ⊤
+                  , here
+                  , [])
                 , refl
 
 ℕ-↓DDecl : ↓DDecl ℕ
@@ -95,13 +101,13 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
              ∷ []
 
     complete : Complete ddecl
-    complete zero    = zero ∶ # ℕ
-                     , here
-                     , []
+    complete zero    = (zero ∶ # ℕ
+                       , here
+                       , [])
                      , refl
-    complete (suc n) = suc  ∶ ℕ ⇾ # ℕ
-                     , there here
-                     , n ∷ []
+    complete (suc n) = (suc  ∶ ℕ ⇾ # ℕ
+                       , there here
+                       , n ∷ [])
                      , refl
 
 ×-↓DDecl : ↓DDecl (ℕ × ℕ)
@@ -117,9 +123,9 @@ _∶_ c α' = record { dom = arg-t α'; con = apply c }
              ∷ []
 
     complete : Complete ddecl
-    complete ( n₁ , n₂ ) = pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
-                         , here
-                         , n₁ ∷ n₂ ∷ []
+    complete ( n₁ , n₂ ) = (pair ∶ ℕ ⇾ ℕ ⇾ # (ℕ × ℕ)
+                           , here
+                           , n₁ ∷ n₂ ∷ [])
                          , refl
 
 data Tree : Set where
@@ -140,13 +146,13 @@ Trees-↓DDecl ~ is-↓DDecl ddecl downward complete
              ∷ []
 
     complete : Complete ddecl
-    complete (Branch l x r) = Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
-                            , here
-                            , l ∷ x ∷ r ∷ []
+    complete (Branch l x r) = (Branch ∶ Tree ⇾ ℕ ⇾ Tree ⇾ # Tree
+                              , here
+                              , l ∷ x ∷ r ∷ [])
                             , refl
-    complete Leaf           = Leaf ∶ # Tree
-                            , there here
-                            , []
+    complete Leaf           = (Leaf ∶ # Tree
+                              , there here
+                              , [])
                             , refl
 
 -- data Pattern {A : Set} : Deconstructible↓ A → Set2 where
