@@ -66,7 +66,7 @@ open import Data.Product
 
 -- case p : α × β of
 --   box(. U[.] , V[.]) ⇒ ...
-case-U,V : (α β : Set) → Case (α × β) 1
+case-U,V : ∀ α β → Case (α × β) 1
 case-U,V α β = _,_ ∶ α ⇾ β ⇾ (α × β) $
              ∷ []
 
