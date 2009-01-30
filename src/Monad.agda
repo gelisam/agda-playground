@@ -61,24 +61,24 @@ open Kit
 
 lift : ∀ {_◆_ Γ Δ τ₁ τ₂}
      → Kit _◆_
-     → (∀ {x} → x ∈ Γ → Δ ◆ x)
+     → (∀ {χ} → χ ∈ Γ → Δ ◆ χ)
      → τ₂ ∈ τ₁ ∷ Γ
      → (τ₁ ∷ Δ) ◆ τ₂
-lift k τ vz     = vr k vz
-lift k τ (vs x) = wk k (τ x)
+lift k t vz     = vr k vz
+lift k t (vs x) = wk k (t x)
 
 trav : ∀ {_◆_ Γ Δ τ}
      → Kit _◆_
-     → (∀ {x} → x ∈ Γ → Δ ◆ x)
+     → (∀ {χ} → χ ∈ Γ → Δ ◆ χ)
      → Γ ⊢ τ
      → Δ ⊢ τ
-trav k τ tt        = tt
-trav k τ (ν x)     = tm k (τ x)
-trav k τ (e₁ · e₂) = trav k τ e₁ · trav k τ e₂
-trav k τ (ƛ e)     = ƛ trav k (lift k τ) e
+trav k t tt        = tt
+trav k t (ν x)     = tm k (t x)
+trav k t (e₁ · e₂) = trav k t e₁ · trav k t e₂
+trav k t (ƛ e)     = ƛ trav k (lift k t) e
 
 rename : ∀ {Γ Δ τ}
-       → (∀ {x} → x ∈ Γ → x ∈ Δ)
+       → (∀ {χ} → χ ∈ Γ → χ ∈ Δ)
        → Γ ⊢ τ
        → Δ ⊢ τ
 rename ρ e = trav kit ρ e
@@ -90,7 +90,7 @@ rename ρ e = trav kit ρ e
         }
 
 substSim : ∀ {Γ Δ τ}
-         → (∀ {x} → x ∈ Γ → Δ ⊢ x)
+         → (∀ {χ} → χ ∈ Γ → Δ ⊢ χ)
          → Γ ⊢ τ
          → Δ ⊢ τ
 substSim σ e = trav kit σ e
@@ -107,16 +107,16 @@ subst : ∀ {Γ τ₁ τ₂}
       → Γ ⊢ τ₂
 subst {Γ} {τ₁} e₁ e₂ = substSim f e₁
   where
-    f : ∀ {γ : Type}
-      → γ ∈ τ₁ ∷ Γ
-      → Γ ⊢ γ
+    f : ∀ {χ}
+      → χ ∈ τ₁ ∷ Γ
+      → Γ ⊢ χ
     f vz     = e₂
     f (vs x) = ν x
 
 data Val : {τ : Type} → [] ⊢ τ → Set where
   Val-tt : Val tt
 
-  Val-ƛ : ∀ {σ τ} {e : σ ∷ [] ⊢ τ}
+  Val-ƛ : ∀ {τ₁ τ₂} {e : τ₁ ∷ [] ⊢ τ₂}
         → Val (ƛ e)
 
 norm : ∀ {τ}
@@ -131,6 +131,8 @@ norm (e₁ · e₂) with norm e₁
   where
     e₂' = proj₁ (norm e₂)
 norm (ƛ e) = , Val-ƛ {e = e}
+
+
 
 -- infixl 1 _⟩⟩=_
 -- codata Comp (α : Set) : Set1 where
