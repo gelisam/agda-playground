@@ -16,7 +16,7 @@ Case α = List₁ (Pat α)
 -- a Case which does cover all cases
 Cover : {α : Set} → Case α → Set1
 Cover {α} case = Surjective₁₀ construct where
-  construct : (∃₁₁ λ p → p ∈ case ×₁₁ HList (pat-dom p)) → α
+  construct : (∃₁₁ λ p → p ∈₁ case ×₁₁ HList (pat-dom p)) → α
   construct p,∈,xs = pat-apply p xs where
     p = proj₁₁₁ p,∈,xs
     ∈,xs = proj₁₁₂ p,∈,xs
