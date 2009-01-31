@@ -10,11 +10,17 @@ l∀₁ : ∀ αs → (HList αs → Set1) → Set1
 l∀₁ []       f = f []
 l∀₁ (α ∷ αs) f = (x : α) → l∀₁ αs λ xs → f (x ∷ xs)
 
-lλ₁ : ∀ αs {f}
-    → ((xs : HList αs) → f xs)
-    → l∀₁ αs f
-lλ₁ []       f = f []
-lλ₁ (α ∷ αs) f = λ x → lλ₁ αs λ xs → f (x ∷ xs)
-
 _l→₁_ : List₁ Set → Set1 → Set1
 _l→₁_ αs β = l∀₁ αs λ _ → β
+
+lλ₁ : ∀ {αs f}
+    → ((xs : HList αs) → f xs)
+    → l∀₁ αs f
+lλ₁ {[]}     f = f []
+lλ₁ {α ∷ αs} f = λ x → lλ₁ λ xs → f (x ∷ xs)
+
+λl₁ : ∀ {αs f}
+    → (l∀₁ αs f)
+    → ((xs : HList αs) → f xs)
+λl₁ f []       = f
+λl₁ f (x ∷ xs) = λl₁ (f x) xs
