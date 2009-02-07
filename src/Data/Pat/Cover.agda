@@ -40,5 +40,5 @@ cover-with : ∀ {α n}
              λ i,xs →
                construct view i,xs
              ≡ construct view (j , xs)
-cover-with view j = lλ₁ (pat-dom (lookup j view))
+cover-with view j = lλ₁ {αs = pat-dom (lookup j view)}
                     λ xs → (j , xs) , refl
