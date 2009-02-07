@@ -6,6 +6,7 @@ open import Data.Fun.Type
 open import Data.Pat
 open import Data.Pat.Helper
 open import Data.Pat.Cover
+open import Data.Pat.Case
 
 
 open import Data.Unit
