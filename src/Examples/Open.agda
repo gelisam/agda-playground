@@ -6,6 +6,9 @@ open import Data.Nat
 open import Data.Fin hiding (_+_)
 open import Data.Vec
 open import Data.Vec1 hiding (lookup)
+open import Data.HList
+open import Data.HVec.Forall
+open import Data.Product1
 open import Data.Fun.Type
 open import Data.Pat
 open import Data.Pat.Helper
@@ -68,12 +71,13 @@ cover-x-z-s-w zero          = cover-with view-x-z-s-w (# 1)
 cover-x-z-s-w (suc x)       = cover-with view-x-z-s-w (# 2) x
 cover-x-z-s-w (var (suc n)) = cover-with view-x-z-s-w (# 3) (var n)
 
-is-var : Open-ℕ 1 -> Bool
-is-var n = case n cover-x-z-s-w
-             true
-             false
-             (λ n → false)
-             (λ n → false)
+is-var2 : Open-ℕ 1 -> Bool
+is-var2 n with {-proj₀₁₁ (proj₁₀₁-} (cover-x-z-s-w n)
+is-var2 .(var zero) | (zero , []) , refl = true
+is-var2 n | otherwise = false
+--               false
+--               (λ n → false)
+--               (λ n → false)
 
 -- cnt-nat : {Γ : ℕ} -> Open-ℕ (suc Γ) -> ℕ
 -- cnt-nat n = case n cover-x-z-s-w
