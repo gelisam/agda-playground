@@ -4,8 +4,10 @@ open import Size
 open import Data.Bool
 open import Data.Nat
 open import Data.Fin hiding (_+_)
-open import Data.Vec
+open import Data.Vec hiding (map)
 open import Data.Vec1 hiding (lookup)
+open import Data.HList
+open import Data.Product1
 open import Data.Fun.Type
 open import Data.Pat
 open import Data.Pat.Helper
@@ -74,6 +76,14 @@ is-var n = case n cover-x-z-s-w
              false
              (λ n → false)
              (λ n → false)
+
+is-var2 : Open-ℕ 1 -> Bool
+is-var2 n with cover-x-z-s-w n
+is-var2 .(var zero) | (zero                       ,     []) , refl = true
+is-var2 .zero       | (suc zero                   ,     []) , refl = false
+is-var2 .(suc n)    | (suc (suc zero)             , n ∷ []) , refl = false
+is-var2 .(weaken n) | (suc (suc (suc zero))       , n ∷ []) , refl = false
+is-var2 _           | (suc (suc (suc (suc ())))   , _     ) , _
 
 -- cnt-nat : {Γ : ℕ} -> Open-ℕ (suc Γ) -> ℕ
 -- cnt-nat n = case n cover-x-z-s-w
