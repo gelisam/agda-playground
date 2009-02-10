@@ -8,8 +8,9 @@ open import Data.Product1.Exists
 infixr 7 _⇾_
 infix 7 _$
 data Type : Set → Set1 where
-  _$  : ∀ α → Type α
-  _⇾_ : ∀ α {β} → Type β → Type (α → β)
+  ↑_  : ∀ α → Type (Size → α)
+  ↓_⇾_ : ∀ α {β} → Type β → Type (α → β)
+  ↕_⇾_ : ∀ α {β} → Type β → Type (α → β)
 
 type : List₁ Set → Set → ∃₁₁ λ α → Type α
 type []       β = β
