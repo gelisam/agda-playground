@@ -7,26 +7,48 @@ open import Data.Sum
 
 -- the many uses of sized types
 
+data S : Set where
+  z : S
+  ⇑_ : S → S
+
 data N : {i : Size} → Set where
   z : {i : Size} → N {↑ i}
   s : {i : Size} → N {i} → N {↑ i}
 
-case : {i : Size} → N {↑ i} → ⊤ ⊎ N {i}
-case z = inj₁ tt
-case (s x) = inj₂ x
+data M : {i : S} → Set where
+  z : {i : S} → M {⇑ i}
+  s : {i : S} → M {i} → M {⇑ i}
 
-pass : {i : Size} → N {i} → ⊤
-pass .{↑ i} (z {i}) with case {i} (z {i})
-... | {- z -}   inj₁ _ = tt
-... | {- s y -} inj₂ y = pass {i} y
-pass .{↑ i} (s {i} x) with case {i} (s {i} x)
-... | {- z -}   inj₁ _ = tt
-... | {- s y -} inj₂ y = pass {i} y
+case-n : {i : Size}{β : Set} → N {↑ i} → β → (N {i} → β) → β
+case-n z     f _ = f
+case-n (s x) _ f = f x
 
-short : {i : Size} → N {i} → ⊤
-short (z {i}) with case {i} z
-... | {- z -}   inj₁ _ = tt
-... | {- s y -} inj₂ y = fail y
-short (s {i} x) with case {i} (s x)
-... | {- z -}   inj₁ _ = tt
-... | {- s y -} inj₂ y = short y
+-- case-m : {i : S}{β : Set} → M {⇑ i} → β → (M {i} → β) → β
+-- case-m z     f _ = f
+-- case-m (s x) _ f = f x
+
+case-m : {i : S} → M {⇑ i} →
+         {C : Set} → C -> (M {i} -> C) -> C
+case-m z     y f = y
+case-m (s x) y f = f x
+
+bla-n : {i : Size} → N {i} → ⊤
+bla-n .{↑ i} (z {i}) = case-n {i} z tt (bla-n {i})
+bla-n .{↑ i} (s {i} x) = case-n {i} (s x) tt (bla-n {i})
+
+bla-m : {i : S} → M {i} → ⊤
+bla-m {z} ()
+bla-m {⇑ i} x  = case-m x tt (λ y → bla-m y)
+
+case : {i : Size}
+     → N {↑ i}
+     → {C : Set}
+     → C
+     → (N {i} → C)
+     → C
+case z     y f = y
+case (s x) y f = f x
+
+bla : {i : S} → M {i} → ⊤
+bla {z} ()
+bla {⇑ i} x = case-m x tt bla
