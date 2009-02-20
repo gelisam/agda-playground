@@ -2,45 +2,34 @@ module Main where
 
 -- following Conor McBride's "Clowns to the Left of me, Jokers to the Right" paper from POPL 2007.
 
-open import Category.Functor
 open import Data.Sum
 open import Data.Product
 
 
-K₁ : (a : Set) → RawFunctor (λ x → a)
-K₁ a = record {_<$>_ = _<$>_} where
-  _<$>_ : ∀ {s t} → (s → t) → a → a
-  f <$> x = x
+infix 4 _+₁_
+infix 4 _×₁_
+data Functor₁ : Set1 where
+  K    : (α : Set)
+       → Functor₁
+  Id   : Functor₁
+  _+₁_ : (p q : Functor₁)
+       → Functor₁
+  _×₁_ : (p q : Functor₁)
+       → Functor₁
 
-Id : RawFunctor (λ x → x)
-Id = record {_<$>_ = _<$>_} where
-  _<$>_ : ∀ {s t} → (s → t) → s → t
-  f <$> x = f x
+infix 3 _⋅_
+_⋅_ : Functor₁ → Set → Set
+K α    ⋅ x = α
+Id     ⋅ x = x
+p +₁ q ⋅ x = p ⋅ x ⊎ q ⋅ x
+p ×₁ q ⋅ x = p ⋅ x × q ⋅ x
 
-_+₁_ : ∀ {p q} → RawFunctor p → RawFunctor q → RawFunctor (λ x → p x ⊎ q x)
-_+₁_ {p} {q} fp fq = record {_<$>_ = _<$>_} where
-  _<p>_ : ∀ {s t} → (s → t) → p s → p t
-  _<p>_ = RawFunctor._<$>_ fp
-  
-  _<q>_ : ∀ {s t} → (s → t) → q s → q t
-  _<q>_ = RawFunctor._<$>_ fq
-  
-  _<$>_ : ∀ {s t} → (s → t) → p s ⊎ q s → p t ⊎ q t
-  f <$> (inj₁ x) = inj₁ (f <p> x)
-  f <$> (inj₂ y) = inj₂ (f <q> y)
+data Rec (f : Functor₁) : Set where
+  μ : f ⋅ (Rec f) → Rec f
 
-_×₁_ : ∀ {p q} → RawFunctor p → RawFunctor q → RawFunctor (λ x → p x × q x)
-_×₁_ {p} {q} fp fq = record {_<$>_ = _<$>_} where
-  _<p>_ : ∀ {s t} → (s → t) → p s → p t
-  _<p>_ = RawFunctor._<$>_ fp
-  
-  _<q>_ : ∀ {s t} → (s → t) → q s → q t
-  _<q>_ = RawFunctor._<$>_ fq
-  
-  _<$>_ : ∀ {s t} → (s → t) → p s × q s → p t × q t
-  f <$> (x , y) = (f <p> x , f <q> y)
-
-
--- negative occurence, damn!
-data Rec {f : Set → Set}(p : RawFunctor f) : Set where
-  μ : f (Rec p) → Rec p
+fmap : ∀ {f s t} → (s → t) → f ⋅ s → f ⋅ t
+fmap {K a}    f x = x
+fmap {Id}     f x = f x
+fmap {p +₁ q} f (inj₁ x) = inj₁ (fmap {p} f x)
+fmap {p +₁ q} f (inj₂ x) = inj₂ (fmap {q} f x)
+fmap {p ×₁ q} f (x , y)  = (fmap {p} f x , fmap {q} f y)
