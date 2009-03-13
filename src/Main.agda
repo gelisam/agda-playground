@@ -1,6 +1,7 @@
 module Main where
 
 
+open import Data.Function
 open import Data.Unit using (⊤)
 open import Data.Product
 
@@ -45,3 +46,29 @@ mutual
   
   _⊦◇_ : Context → Type → Set
   Δ ⊦◇ τ = ∃ λ Γ → Γ ≤ Δ × Γ ⊦ τ
+
+-- _≤_ is reflexive and transitive, so it's at least a preorder.
+-- 
+-- if it was antisymmetric (which it is if we use logical equivalence for equality),
+-- it would be a partial order.
+-- 
+-- it's also monotonic and transitive. it there a special name for it?
+
+reflexive : ∀ {Γ}
+          → Γ ≤ Γ
+reflexive = id
+
+transitive : ∀ {Γ Δ Ψ}
+           → Γ ≤ Δ
+           →     Δ ≤ Ψ
+           → Γ   ≤   Ψ
+transitive f_ g_ x = g f x
+
+monotonic : ∀ {Γ Δ τ}
+          → Γ     ≤ Δ
+          → Γ ▸ τ ≤ Δ ▸ τ
+monotonic f x = f (proj₁ x) , proj₂ x
+
+-- weaken : ∀ {Γ τ}
+--        → Γ ≤ Γ ▸ τ
+-- weaken = broken!
