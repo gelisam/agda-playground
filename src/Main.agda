@@ -42,7 +42,7 @@ mutual
   
   infix 3 _≤_
   _≤_ : Context → Context → Set
-  Γ ≤ Δ = ⟦ Γ ⟧c → ⟦ Δ ⟧c
+  Γ ≤ Δ = ⟦ Δ ⟧c → ⟦ Γ ⟧c
   
   _⊦◇_ : Context → Type → Set
   Δ ⊦◇ τ = ∃ λ Γ → Γ ≤ Δ × Γ ⊦ τ
@@ -62,13 +62,13 @@ transitive : ∀ {Γ Δ Ψ}
            → Γ ≤ Δ
            →     Δ ≤ Ψ
            → Γ   ≤   Ψ
-transitive f_ g_ x = g f x
+transitive f g = f ∘ g
 
 monotonic : ∀ {Γ Δ τ}
           → Γ     ≤ Δ
           → Γ ▸ τ ≤ Δ ▸ τ
 monotonic f x = f (proj₁ x) , proj₂ x
 
--- weaken : ∀ {Γ τ}
---        → Γ ≤ Γ ▸ τ
--- weaken = broken!
+weaken : ∀ {Γ τ}
+       → Γ ≤ Γ ▸ τ
+weaken = proj₁
