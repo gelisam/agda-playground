@@ -89,7 +89,7 @@ module Chains {α : Set} {_≈_ : Rel α} (R : ChainRel _≈_) where
   head (x ∷ _ , _) = x
 
   data _∈_ : ∀ {n} → carrier → Chain n → Set where
-    here  : ∀ {x    n} {xs : Chain n} {p} → x ∈ (x ∷ xs , p) 
+    here  : ∀ {x    n} {xs : Chain n} {p}                 → x ∈ (x  ∷ xs , p)
     there : ∀ {x x′ n} {xs : Chain n} {p} (x∈xs : x ∈ xs) → x ∈ (x′ ∷ xs , p)
 
 --------------------------------------------------------------------------------
@@ -189,27 +189,21 @@ module Delay where
   -- The infinitely delayed computation.
 
   never : ∀ {α} → Delay α
-  never = later never′
-    where
-      never′ ~ ♯ never
+  never = later (♯ never)
 
   -- Given two computations, choose the one that finishes first (left-biased).
 
   race : ∀ {α} → Delay α → Delay α → Delay α
   race (now   v₁) _          = now v₁
   race _          (now   v₂) = now v₂
-  race (later d₁) (later d₂) = later race′
-    where
-      race′ ~ ♯ race (♭ d₁) (♭ d₂)
+  race (later d₁) (later d₂) = later (♯ race (♭ d₁) (♭ d₂))
 
   -- Given two computations, choose the one that finishes last (right-biased).
 
   wait : ∀ {α} → Delay α → Delay α → Delay α
   wait (now   _ ) d₂         = d₂
   wait d₁         (now   _ ) = d₁
-  wait (later d₁) (later d₂) = later wait′
-    where
-      wait′ ~ ♯ wait (♭ d₁) (♭ d₂)
+  wait (later d₁) (later d₂) = later (♯ wait (♭ d₁) (♭ d₂))
 
   -- Peel off at most n "later" constructors.
 
@@ -293,8 +287,8 @@ module Termination where
   race⇣⊎ {α} {later  d₁} {now   .v₂} (⇣-now   {v₂}) = inj₂ ⇣-now
   race⇣⊎ {α} {later  d₁} {later  d₂} (⇣-later race⇣)
     with race⇣⊎ {α} {♭ d₁} {♭ d₂} race⇣
-  ... | inj₁ ♭d₁⇣v = inj₁ (⇣-later ♭d₁⇣v)
-  ... | inj₂ ♭d₂⇣v = inj₂ (⇣-later ♭d₂⇣v)
+  ... | inj₁ ♭d₁⇣v                                  = inj₁ (⇣-later ♭d₁⇣v)
+  ... | inj₂ ♭d₂⇣v                                  = inj₂ (⇣-later ♭d₂⇣v)
 
 --------------------------------------------------------------------------------
 -- Ordering
@@ -451,11 +445,9 @@ module delayDomain (α : Set) where
       ωrace (now   v₁ ∷ dω , p₁) = now v₁
       ωrace (later d₁ ∷ dω , p₁) with ♭ dω
       ... | now   v₂ ∷ dω′ , p₂  = now v₂
-      ... | later d₂ ∷ dω′ , p₂  = later ωrace′
+      ... | later d₂ ∷ dω′ , p₂  = later (♯ ωrace (race (♭ d₁) (♭ d₂) ∷ dω′ , p))
         where
-          ωrace′ ~ ♯ ωrace (race (♭ d₁) (♭ d₂) ∷ dω′ , p)
-            where
-              p = case (⊑-trans (later-⊑-later p₁) (later-⊑ p₂)) (later-⊑ p₂)
+          p = case (⊑-trans (later-⊑-later p₁) (later-⊑ p₂)) (later-⊑ p₂)
 
       poset→⊔-semi : {d₁ d₂ : Delay α} → d₁ ⊑ d₂ → d₁ ⊑ race d₁ d₂
       poset→⊔-semi (⊑-intro f) = ⊑-intro (lemma f)
