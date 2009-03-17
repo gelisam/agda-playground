@@ -161,6 +161,7 @@ module Domains {α : Set} {_≈_ : Rel α} (R : ChainRel _≈_) where
     : Set where
     field
       ⊑-Reflexive  : Reflexive _≈_ _⊑_
+      ⊥-is-least   : ∀ {x} → ⊥ ⊑ x
       poset→⊔-semi : ∀ {x₁ x₂} → x₁ ⊑ x₂ → x₁ ⊑ (x₁ ⊔ x₂)
       poset→⊓-semi : ∀ {x₁ x₂} → x₁ ⊑ x₂ → (x₁ ⊓ x₂) ⊑ x₂
       sup-is-lub   : ∀ {xω} → LeastUpperBound (⊔ω xω) xω
@@ -397,7 +398,8 @@ module delayDomain (α : Set) where
     ; ⊔ω       = ωrace
     ; _⊓_      = wait
     ; isDomain = record
-      { ⊑-Reflexive = ⊑-refl
+      { ⊑-Reflexive  = ⊑-refl
+      ; ⊥-is-least   = ⊥-is-least
       ; poset→⊔-semi = poset→⊔-semi
       ; poset→⊓-semi = poset→⊓-semi
       ; sup-is-lub   = {!!}
@@ -410,6 +412,7 @@ module delayDomain (α : Set) where
       open import Data.Product
       open import Data.Sum
       open import Relation.Binary.PropositionalEquality
+      open import Relation.Nullary.Negation
 
       open Chains  ⊑-Rel
         hiding (head)
@@ -431,6 +434,9 @@ module delayDomain (α : Set) where
                   lemma′ v p with race⇣⊎ {α} {♭ d₁} {♭ d₂} p
                   ... | inj₁ ♭d₁⇣v = ⊑-inv (⊑-trans p₁ p₂) _ (⇣-later ♭d₁⇣v)
                   ... | inj₂ ♭d₂⇣v = ⊑-inv             p₂  _ (⇣-later ♭d₂⇣v)
+
+      ⊥-is-least : ∀ {d : Delay α} → never ⊑ d
+      ⊥-is-least = ⊑-intro (λ _ never⇣v → contradiction never⇣v ¬never⇣)
 
       poset→⊔-semi : {d₁ d₂ : Delay α} → d₁ ⊑ d₂ → d₁ ⊑ race d₁ d₂
       poset→⊔-semi (⊑-intro f) = ⊑-intro (lemma f)
