@@ -142,7 +142,8 @@ module ωChains {α : Set} {_≈_ : Rel α} (R : ChainRel _≈_) where
   UpperBound x xω = ∀ {y} → y ∈ xω → y ≤ x
 
   LeastUpperBound : carrier → ωChain → Set
-  LeastUpperBound x xω = UpperBound x xω ∧ (∀ {x′} → UpperBound x′ xω → x ≤ x′)
+  LeastUpperBound x xω = UpperBound x xω
+                       ∧ (∀ {x′} → UpperBound x′ xω → x ≤ x′)
 
 --------------------------------------------------------------------------------
 -- Domains
@@ -299,6 +300,7 @@ module Termination where
 -- Ordering
 
 module Ordering where
+  open import Coinduction
   open import Relation.Nullary.Negation
 
   open Delay
@@ -329,7 +331,17 @@ module Ordering where
   never⊑d : {α : Set} {d : Delay α} → never ⊑ d
   never⊑d = ⊑-intro (λ _ never⇣ → contradiction never⇣ ¬never⇣)
 
-------------------------------------------------------------------------
+  later-⊑-later : {α : Set} {d₁ d₂ : ∞ (Delay α)}
+                → later d₁ ⊑ later d₂
+                → ♭ d₁ ⊑ ♭ d₂
+  later-⊑-later (⊑-intro f) = ⊑-intro (λ _ ♭d₁⇣v → ⇣-inv (f _ (⇣-later ♭d₁⇣v)))
+
+  later-⊑ : {α : Set} {d₁ : ∞ (Delay α)} {d₂ : Delay α}
+          → later d₁ ⊑ d₂
+          → ♭ d₁ ⊑ d₂
+  later-⊑ (⊑-intro f) = ⊑-intro (λ _ ♭d₁⇣v → f _ (⇣-later ♭d₁⇣v))
+
+--------------------------------------------------------------------------------
 -- Equivalence
 
 module Equivalence where
@@ -374,7 +386,7 @@ module Equivalence where
   ≃-resp-⊒ (≃-antisym _ (⊑-intro f₂)) (⊑-intro f₃) =
     ⊑-intro (λ _ d₂⇣v → f₃ _ (f₂ _ d₂⇣v))
 
-------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Domain Instances
 
 module delayDomain (α : Set) where
@@ -399,7 +411,7 @@ module delayDomain (α : Set) where
     ; _⊓_      = wait
     ; isDomain = record
       { ⊑-Reflexive  = ⊑-refl
-      ; ⊥-is-least   = ⊥-is-least
+      ; ⊥-is-least   = never⊑d
       ; poset→⊔-semi = poset→⊔-semi
       ; poset→⊓-semi = poset→⊓-semi
       ; sup-is-lub   = {!!}
@@ -412,63 +424,78 @@ module delayDomain (α : Set) where
       open import Data.Product
       open import Data.Sum
       open import Relation.Binary.PropositionalEquality
-      open import Relation.Nullary.Negation
 
       open Chains  ⊑-Rel
         hiding (head)
       open ωChains ⊑-Rel
       open Termination
 
+      case : {d₁ d₂ d₃ : Delay α} → d₁ ⊑ d₃ → d₂ ⊑ d₃ → race d₁ d₂ ⊑ d₃
+      case (⊑-intro f₁) (⊑-intro f₂) = ⊑-intro (case′ f₁ f₂)
+        where
+          case′ : {d₁ d₂ d₃ : Delay α}
+                → ((v : α) →      d₁    ⇣ v → d₃ ⇣ v)
+                → ((v : α) →         d₂ ⇣ v → d₃ ⇣ v)
+                → ((v : α) → race d₁ d₂ ⇣ v → d₃ ⇣ v)
+          case′ {now   v₁}                 d₁⊑d₃ _     _          race⇣v  =
+            d₁⊑d₃         _ race⇣v
+          case′ {later d₁} {now   v₂}      _     d₂⊑d₃ _          race⇣v  =
+            d₂⊑d₃         _ race⇣v
+          case′ {later d₁} {later d₂} {d₃} d₁⊑d₃ d₂⊑d₃ _ (⇣-later race⇣v) =
+            case′ f₁′ f₂′ _ race⇣v
+            where
+              f₁′ = λ _ ♭d₁⇣v′ → d₁⊑d₃ _ (⇣-later ♭d₁⇣v′)
+              f₂′ = λ _ ♭d₂⇣v′ → d₂⊑d₃ _ (⇣-later ♭d₂⇣v′)
+
       ωrace : ωChain → Delay α
       ωrace (now   v₁ ∷ dω , p₁) = now v₁
       ωrace (later d₁ ∷ dω , p₁) with ♭ dω
-      ... | now   v₂ ∷ dω′ , p₂ = now v₂
-      ... | later d₂ ∷ dω′ , p₂ = later ωrace′
+      ... | now   v₂ ∷ dω′ , p₂  = now v₂
+      ... | later d₂ ∷ dω′ , p₂  = later ωrace′
         where
-          ωrace′ ~ ♯ ωrace (race (♭ d₁) (♭ d₂) ∷ dω′ , lemma)
+          ωrace′ ~ ♯ ωrace (race (♭ d₁) (♭ d₂) ∷ dω′ , p)
             where
-              lemma : race (♭ d₁) (♭ d₂) ⊑ head (♭ dω′)
-              lemma = ⊑-intro lemma′
-                where
-                  lemma′ : (v : α) → race (♭ d₁) (♭ d₂) ⇣ v → head (♭ dω′) ⇣ v
-                  lemma′ v p with race⇣⊎ {α} {♭ d₁} {♭ d₂} p
-                  ... | inj₁ ♭d₁⇣v = ⊑-inv (⊑-trans p₁ p₂) _ (⇣-later ♭d₁⇣v)
-                  ... | inj₂ ♭d₂⇣v = ⊑-inv             p₂  _ (⇣-later ♭d₂⇣v)
-
-      ⊥-is-least : ∀ {d : Delay α} → never ⊑ d
-      ⊥-is-least = ⊑-intro (λ _ never⇣v → contradiction never⇣v ¬never⇣)
+              p = case (⊑-trans (later-⊑-later p₁) (later-⊑ p₂)) (later-⊑ p₂)
 
       poset→⊔-semi : {d₁ d₂ : Delay α} → d₁ ⊑ d₂ → d₁ ⊑ race d₁ d₂
       poset→⊔-semi (⊑-intro f) = ⊑-intro (lemma f)
         where
-          lemma : {d₁ d₂ : Delay α } → ((v : α) → d₁ ⇣ v → d₂ ⇣ v) → ((v : α) → d₁ ⇣ v → race d₁ d₂ ⇣ v)
-          lemma                       f′ v  ⇣-now         = ⇣-now
-          lemma {later d₁} {now   v₂} f′ v d₁⇣v           = f′ _ d₁⇣v
-          lemma {later d₁} {later d₂} f′ v (⇣-later d₁⇣v) = ⇣-later (lemma (λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))) _ d₁⇣v)
+          lemma : {d₁ d₂ : Delay α }
+                → ((v : α) → d₁ ⇣ v → d₂ ⇣ v)
+                → ((v : α) → d₁ ⇣ v → race d₁ d₂ ⇣ v)
+          lemma                       f′ v  ⇣-now         =
+            ⇣-now
+          lemma {later d₁} {now   v₂} f′ v          d₁⇣v  =
+            f′ _ d₁⇣v
+          lemma {later d₁} {later d₂} f′ v (⇣-later d₁⇣v) =
+            ⇣-later (lemma f″ _ d₁⇣v)
+            where
+              f″ = λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))
 
       poset→⊓-semi : {d₁ d₂ : Delay α} → d₁ ⊑ d₂ → wait d₁ d₂ ⊑ d₂
       poset→⊓-semi (⊑-intro f) = ⊑-intro (lemma₂ f)
         where
-          lemma₁ : {d₁ d₂ : Delay α } → ((v : α) → d₁ ⇣ v → d₂ ⇣ v) → ((v : α) → wait d₁ d₂ ⇣ v → d₁ ⇣ v)
-          lemma₁ {now   v₁}            f′ v wait⇣v           = subst (_⇣_ (now v₁)) (⇣-unique (f′ _ ⇣-now) wait⇣v) ⇣-now
-          lemma₁ {later d₁} {now   v₂} f′ v wait⇣v           = wait⇣v
-          lemma₁ {later d₁} {later d₂} f′ v (⇣-later wait⇣v) = ⇣-later (lemma₁ (λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))) _ wait⇣v)
+          lemma₁ : {d₁ d₂ : Delay α }
+                 → ((v : α) → d₁ ⇣ v → d₂ ⇣ v)
+                 → ((v : α) → wait d₁ d₂ ⇣ v → d₁ ⇣ v)
+          lemma₁ {now   v₁}            f′ v          wait⇣v  =
+            subst (_⇣_ (now v₁)) (⇣-unique (f′ _ ⇣-now) wait⇣v) ⇣-now
+          lemma₁ {later d₁} {now   v₂} f′ v          wait⇣v  =
+            wait⇣v
+          lemma₁ {later d₁} {later d₂} f′ v (⇣-later wait⇣v) =
+            ⇣-later (lemma₁ f″ _ wait⇣v)
+            where
+              f″ = λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))
 
-          lemma₂ : {d₁ d₂ : Delay α } → ((v : α) → d₁ ⇣ v → d₂ ⇣ v) → ((v : α) → wait d₁ d₂ ⇣ v → d₂ ⇣ v)
-          lemma₂ {now   v₁}            f′ v wait⇣v           = wait⇣v
-          lemma₂ {later d₁} {now   v₂} f′ v wait⇣v           = f′ _ wait⇣v
-          lemma₂ {later d₁} {later d₂} f′ v (⇣-later wait⇣v) = f′ _ (⇣-later (lemma₁ (λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))) _ wait⇣v))
+          lemma₂ : {d₁ d₂ : Delay α }
+                 → ((v : α) → d₁ ⇣ v → d₂ ⇣ v)
+                 → ((v : α) → wait d₁ d₂ ⇣ v → d₂ ⇣ v)
+          lemma₂ {now   v₁}            f′ v          wait⇣v  =
+            wait⇣v
+          lemma₂ {later d₁} {now   v₂} f′ v          wait⇣v  =
+            f′ _ wait⇣v
+          lemma₂ {later d₁} {later d₂} f′ v (⇣-later wait⇣v) =
+            f′ _ (⇣-later (lemma₁ f″ _ wait⇣v))
+              where
+                f″ = λ _ ♭d₁⇣v′ → ⇣-inv (f′ _ (⇣-later ♭d₁⇣v′))
 
---   record Fold (ϕ : carrier → Set) (_⊕_ : Op₂ carrier) : Set where
---     field
---       lemma₁ : ∀ {x₁ x₂} → ϕ x₁ → x₁ ≤ x₂ → ϕ x₂
---       lemma₂ : ∀ {x₁ x₂} → x₁ ≤ x₂ → x₁ ≤ (x₁ ⊕ x₂)
-
---     mutual
---       fold₁ : ∀ {n} (xs : Chain (suc n)) → ϕ (head xs) → Σ α ϕ
---       fold₁ (x ∷      [] , p)      ε = x , ε
---       fold₁ (x ∷ x′ ∷ xs , p′ , p) ε = x ⊕ proj₁ (fold₁ (x′ ∷ xs , p′) (lemma₁ ε p)) , lemma₃
-
---       lemma₃ : ∀ {x} {n} {x′} {xs : Chain n} {p′ p} {ε : ϕ x} → ϕ (x ⊕ proj₁ (fold₁ (x′ ∷ xs , p′) (lemma₁ ε p)))
---       lemma₃ {x} {0}     {x′} {[]}            {p = p} {ε} = lemma₁ ε (lemma₂ p)
---       lemma₃ {x} {suc n} {x′} {x″ ∷ xs′ , p″} {p = p} {ε} = lemma₁ ε (lemma₂ (trans p (lemma₂ {!!})))
