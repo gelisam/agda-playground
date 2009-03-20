@@ -1,54 +1,25 @@
 module Semantic where
 
 
-open import Data.Function
+open import Context
 open import Data.Unit using (⊤)
 open import Data.Product
-
-
-infixr 6 _→t_
-data Type : Set where
-  unit : Type
-  _→t_  : (τ₁ τ₂ : Type) → Type 
 
 ⟦_⟧t : Type → Set
 ⟦ unit ⟧t = ⊤
 ⟦ τ₁ →t τ₂ ⟧t = ⟦ τ₁ ⟧t → ⟦ τ₂ ⟧t
 
-
-infixl 5 _▸_
-data Context : Set where
-  ε   : Context
-  _▸_ : Context → Type → Context
-
 ⟦_⟧c : Context → Set
 ⟦ ε ⟧c = ⊤
 ⟦ Γ ▸ τ ⟧c = ⟦ Γ ⟧c × ⟦ τ ⟧t
 
+infix 3 _≤_
+_≤_ : Context → Context → Set
+Γ ≤ Δ = ⟦ Δ ⟧c → ⟦ Γ ⟧c
 
-mutual
-  infix 3 _⊦_
-  infix 3 _⊦◇_
-  infixl 4 _⋅_
-  data _⊦_ : Context → Type → Set where
-    tt  : ε ⊦ unit
-    var : ∀ {Γ τ}
-        → Γ ▸ τ ⊦ τ
-    _⋅_ : ∀ {Γ τ₁ τ₂}
-        → Γ ⊦◇ τ₁ →t τ₂
-        → Γ ⊦◇ τ₁
-        → Γ ⊦ τ₂
-    ƛ   : ∀ {Γ τ₁ τ₂}
-        → Γ ▸ τ₁ ⊦◇ τ₂
-        → Γ ⊦ τ₁ →t τ₂
-  
-  infix 3 _≤_
-  _≤_ : Context → Context → Set
-  Γ ≤ Δ = ⟦ Δ ⟧c → ⟦ Γ ⟧c
-  
-  _⊦◇_ : Context → Type → Set
-  Δ ⊦◇ τ = ∃ λ Γ → Γ ≤ Δ × Γ ⊦ τ
-
+import Jugement
+open Jugement _≤_
+open import Data.Function
 
 -- _≤_ is reflexive and transitive, so it's at least a preorder.
 -- 
