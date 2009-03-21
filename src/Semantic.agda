@@ -5,6 +5,7 @@ open import Context
 open import Data.Unit using (⊤)
 open import Data.Product
 
+
 ⟦_⟧t : Type → Set
 ⟦ unit ⟧t = ⊤
 ⟦ τ₁ →t τ₂ ⟧t = ⟦ τ₁ ⟧t → ⟦ τ₂ ⟧t
@@ -54,7 +55,7 @@ initial x = _
 
 mutual
   true-j : ∀ {Γ τ}
-         → (j : Γ ⊦ τ)
+         → (j : Γ ⊦ τ term)
          → ⟦ Γ ⟧c → ⟦ τ ⟧t
   true-j                tt         _        = _
   true-j                var       (eΓ , eτ) = eτ
@@ -62,32 +63,40 @@ mutual
   true-j {Γ} {τ₁ →t τ₂} (ƛ e)      eΓ       = λ eτ₁ → true-◇ {Γ ▸ τ₁} e (eΓ , eτ₁)
   
   true-◇ : ∀ {Δ τ}
-         → (j : Δ ⊦◇ τ)
+         → (j : Δ ⊦◇ τ term)
          → ⟦ Δ ⟧c → ⟦ τ ⟧t
-  true-◇ (Γ , Γ≤Δ , j) = true-j j ∘ Γ≤Δ
+  true-◇ (Γ / Γ≤Δ ⊦ j) = true-j j ∘ Γ≤Δ
 
 -- here's how to add ((ƛ x → ...) tt) around a jugement j.
 complexify : ∀ {Γ τ}
-         → Γ ⊦ τ
-         → Γ ⊦ τ
+         → Γ ⊦ τ term
+         → Γ ⊦ τ term
 complexify {Γ} {τ} j = ◇ƛ ⋅ ◇tt where
-  weaker-j : Γ ▸ unit ⊦◇ τ
-  weaker-j = Γ , weaken {Γ} , j
+  weaker-j : Γ ▸ unit ⊦◇ τ term
+  weaker-j = Γ / weaken {Γ} ⊦ j
   
-  ◇ƛ : Γ ⊦◇ unit →t τ
-  ◇ƛ = Γ , reflexive {Γ} , ƛ {Γ} weaker-j
+  ◇ƛ : Γ ⊦◇ unit →t τ term
+  ◇ƛ = Γ / reflexive {Γ} ⊦ ƛ {Γ} weaker-j
   
-  ◇tt : Γ ⊦◇ unit
-  ◇tt = ε , initial {Γ} , tt
+  ◇tt : Γ ⊦◇ unit term
+  ◇tt = ε / initial {Γ} ⊦ tt
 
 -- here's how to add ((ƛ x → ...) tt) around an opaque variable
 -- having the same type as j.
 simplify : ∀ {Γ τ}
-         → Γ ⊦ τ
-         → Γ ⊦ τ
+         → Γ ⊦ τ term
+         → Γ ⊦ τ term
 simplify {Γ} {τ} j = ◇ƛ ⋅ ◇tt where
-  ◇ƛ : Γ ⊦◇ unit →t τ
-  ◇ƛ = ε ▸ unit →t τ , (λ eΓ → _ , λ _ → true-j j eΓ) , var
+  ◇ƛ : Γ ⊦◇ unit →t τ term
+  ◇ƛ = ε ▸ unit →t τ / (λ eΓ → _ , λ _ → true-j j eΓ) ⊦ var
   
-  ◇tt : Γ ⊦◇ unit
-  ◇tt = ε , initial {Γ} , tt
+  ◇tt : Γ ⊦◇ unit term
+  ◇tt = ε / initial {Γ} ⊦ tt
+
+
+import Substitution
+open Substitution _≤_
+  (λ {Γ}     → reflexive  {Γ})
+  (λ {Γ Δ Ψ} → transitive {Γ} {Δ} {Ψ})
+  (λ {Γ Δ τ} → monotonic  {Γ} {Δ} {τ})
+  (λ {Γ   τ} → weaken     {Γ}     {τ})
