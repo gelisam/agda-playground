@@ -1,7 +1,7 @@
 module Main where
 
-open import Data.Nat
-open import Data.Fin hiding (_+_ ; _≤_)
+open import Data.Nat hiding (_≤_)
+open import Data.Fin hiding (_≤_)
 open import Context
 
 
@@ -24,3 +24,10 @@ data Value : {τ : Type} → ε ⊦ τ term → Set where
   ƛ    : ∀ {τ₁ τ₂}
        → (e : ε ▸ τ₁ ⊦ τ₂ term)
        → Value (ƛ e)
+
+-- weaken : ∀ {n m τ}{Γ : Ctx n}{Δ : Ctx m}
+--        → Γ ≤ Δ
+--        → Γ ⊦ τ term
+--        → Δ ⊦ τ term
+-- weaken Γ≤Δ (var i) = var (reindex Γ≤Δ i)
+-- weaken Γ≤Δ e = _
