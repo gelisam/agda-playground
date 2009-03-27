@@ -55,3 +55,10 @@ subst-term {n} {m} {τ₁ ⇾ τ₂} {Δ} {Γ} (ƛ e) σ = ƛ e' where
   
   e' : Δ ▸ τ₁ ⊦ τ₂ term
   e' = subst-term e ▸σ▸
+
+subst-sub : ∀ {n m l}{Ψ : Ctx n}{Δ : Ctx m}{Γ : Ctx l}
+          → Δ ⊦ Γ sub
+          → Ψ ⊦ Δ sub
+          → Ψ ⊦ Γ sub
+subst-sub ε       σ = ε
+subst-sub (ρ ▸ e) σ = (subst-sub ρ σ) ▸ (subst-term e σ)
