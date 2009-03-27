@@ -7,6 +7,14 @@ open import Relation.Binary.PropositionalEquality
 open import Context
 
 
+private
+  infix 5 _!!_
+  _!!_ : ∀ {n}
+       → Ctx n
+       → Fin n
+       → Type
+  _!!_ = lookup-ctx
+
 infix 4 _⊦_term 
 infixl 5 _⋅_
 data _⊦_term {n : ℕ}(Γ : Ctx n) : Type → Set where

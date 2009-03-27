@@ -15,14 +15,21 @@ data Ctx : ℕ → Set where
   _▸_ : ∀ {n}
       → Ctx n → Type → Ctx (suc n)
 
-infix 5 _!!_
-_!!_ : ∀ {n}
-     → Ctx n
-     → Fin n
-     → Type
-ε     !! ()
-Γ ▸ τ !! zero    = τ
-Γ ▸ τ !! (suc n) = Γ !! n
+lookup-ctx : ∀ {n}
+           → Ctx n
+           → Fin n
+           → Type
+lookup-ctx (ε    ) ()
+lookup-ctx (Γ ▸ τ) zero    = τ
+lookup-ctx (Γ ▸ τ) (suc i) = lookup-ctx Γ i
+
+private
+  infix 5 _!!_
+  _!!_ : ∀ {n}
+       → Ctx n
+       → Fin n
+       → Type
+  _!!_ = lookup-ctx
 
 infix 1 _≤_
 data _≤_ : {n m : ℕ} → Ctx n → Ctx m → Set where
