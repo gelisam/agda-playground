@@ -2,6 +2,7 @@ module Context.Properties where
 
 open import Data.Nat hiding (_≤_)
 open import Context
+open import Context.Subset
 
 
 reflective : ∀ {n}{Γ : Ctx n}

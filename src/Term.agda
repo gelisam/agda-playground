@@ -5,15 +5,9 @@ open import Data.Fin hiding (_≤_)
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 open import Context
+open import Context.Syntax
+open import Context.Subset
 
-
-private
-  infix 5 _!!_
-  _!!_ : ∀ {n}
-       → Ctx n
-       → Fin n
-       → Type
-  _!!_ = lookup-ctx
 
 infix 4 _⊦_term 
 infixl 5 _⋅_
