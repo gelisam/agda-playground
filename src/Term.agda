@@ -22,13 +22,13 @@ data _⊦_term {n : ℕ}(Γ : Ctx n) : Type → Set where
        → Γ ⊦ τ₁ ⇾ τ₂ term
 
 weaken : ∀ {n m τ}{Γ : Ctx n}{Δ : Ctx m}
-       → Γ ≤ Δ
        → Γ ⊦ τ term
+       → Γ ≤ Δ
        → Δ ⊦ τ term
-weaken {n} {m} .{Γ !! i} {Γ} {Δ} Γ≤Δ (var i) = var_j where
+weaken {n} {m} .{Γ !! i} {Γ} {Δ} (var i) Γ≤Δ = var_j where
   j,prf : Σ (Fin m) λ j
           → Γ !! i ≡ Δ !! j
-  j,prf = reindex Γ≤Δ i
+  j,prf = reindex i Γ≤Δ
   
   j : Fin m
   j = proj₁ j,prf
@@ -40,6 +40,7 @@ weaken {n} {m} .{Γ !! i} {Γ} {Δ} Γ≤Δ (var i) = var_j where
   convert refl e | .(Γ !! i) = e
   
   var_j = convert (proj₂ j,prf) (var j)
-weaken Γ≤Δ unit = unit
-weaken Γ≤Δ (e₁ ⋅ e₂) = (weaken Γ≤Δ e₁) ⋅ (weaken Γ≤Δ e₂)
-weaken Γ≤Δ (ƛ e) = ƛ (weaken (Γ≤Δ keep) e)
+weaken unit      Γ≤Δ = unit
+weaken (e₁ ⋅ e₂) Γ≤Δ = (weaken e₁ Γ≤Δ) ⋅
+                       (weaken e₂ Γ≤Δ)
+weaken (ƛ e)     Γ≤Δ = ƛ (weaken e (Γ≤Δ keep))

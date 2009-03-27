@@ -39,21 +39,21 @@ open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
 reindex : ∀ {n m}{Γ : Ctx n}{Δ : Ctx m}
-        → Γ ≤ Δ
         → (i : Fin n)
+        → Γ ≤ Δ
         → Σ (Fin m) λ j
           → Γ !! i ≡ Δ !! j
-reindex start ()
-reindex {suc n} {suc m} {Γ ▸ τ} {Δ ▸ .τ} (Γ≤Δ keep) zero = j , prf where
+reindex () start
+reindex {suc n} {suc m} {Γ ▸ τ} {Δ ▸ .τ} zero (Γ≤Δ keep) = j , prf where
   j : Fin (suc m)
   j = zero
   
   prf : Γ ▸ τ !! zero ≡ Δ ▸ τ !! j
   prf = refl
-reindex {suc n} {suc m} {Γ ▸ τ} {Δ ▸ .τ} (Γ≤Δ keep) (suc i) = j , prf where
+reindex {suc n} {suc m} {Γ ▸ τ} {Δ ▸ .τ} (suc i) (Γ≤Δ keep) = j , prf where
   j,prf : Σ (Fin m) λ j
           → Γ !! i ≡ Δ !! j
-  j,prf = reindex Γ≤Δ i
+  j,prf = reindex i Γ≤Δ
   
   j : Fin (suc m)
   j = suc (proj₁ j,prf)
@@ -69,10 +69,10 @@ reindex {suc n} {suc m} {Γ ▸ τ} {Δ ▸ .τ} (Γ≤Δ keep) (suc i) = j , pr
     ≡⟨ byDef ⟩ 
       Δ ▸ τ !! j
     ∎
-reindex {n} {suc m} {Γ} {Δ ▸ τ} (Γ≤Δ drop) i = j , prf where
+reindex {n} {suc m} {Γ} {Δ ▸ τ} i (Γ≤Δ drop) = j , prf where
   j,prf : Σ (Fin m) λ j
           → Γ !! i ≡ Δ !! j
-  j,prf = reindex Γ≤Δ i
+  j,prf = reindex i Γ≤Δ
   
   j : Fin (suc m)
   j = suc (proj₁ j,prf)

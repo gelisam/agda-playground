@@ -1,6 +1,7 @@
 module Sub where
 
 open import Data.Nat hiding (_≤_)
+open import Data.Fin hiding (_≤_)
 open import Context
 open import Term
 
@@ -14,8 +15,16 @@ data _⊦_sub {n : ℕ} (Δ : Ctx n) : {m : ℕ} → Ctx m → Set where
       → Δ ⊦  Γ ▸ τ sub
 
 weaken-sub : ∀ {n m l}{Δ : Ctx n}{Ψ : Ctx m}{Γ : Ctx l}
-           → Δ ≤ Ψ
            → Δ ⊦ Γ sub
+           → Δ ≤ Ψ
            → Ψ ⊦ Γ sub
-weaken-sub Δ≤Ψ ε       = ε
-weaken-sub Δ≤Ψ (σ ▸ e) = weaken-sub Δ≤Ψ σ ▸ weaken Δ≤Ψ e
+weaken-sub ε       Δ≤Ψ = ε
+weaken-sub (σ ▸ e) Δ≤Ψ = weaken-sub σ Δ≤Ψ ▸ weaken e Δ≤Ψ
+
+lookup-sub : ∀ {n m}{Δ : Ctx n}{Γ : Ctx m}
+           → Δ ⊦ Γ sub
+           → (i : Fin m)
+           → Δ ⊦ Γ !! i term
+lookup-sub ε ()
+lookup-sub (σ ▸ e) zero = e
+lookup-sub (σ ▸ e) (suc i) = lookup-sub σ i
