@@ -3,17 +3,11 @@ module Sub where
 open import Data.Nat hiding (_≤_)
 open import Data.Fin hiding (_≤_)
 open import Context
+open import Context.Syntax
+open import Context.Subset
 open import Context.Properties
 open import Term
 
-
-private
-  infix 5 _!!_
-  _!!_ : ∀ {n}
-       → Ctx n
-       → Fin n
-       → Type
-  _!!_ = lookup-ctx
 
 infix 0 _⊦_sub
 data _⊦_sub {n : ℕ} (Δ : Ctx n) : {m : ℕ} → Ctx m → Set where
@@ -28,7 +22,17 @@ weaken-sub : ∀ {n m l}{Δ : Ctx n}{Ψ : Ctx m}{Γ : Ctx l}
            → Δ ≤ Ψ
            → Ψ ⊦ Γ sub
 weaken-sub ε       Δ≤Ψ = ε
-weaken-sub (σ ▸ e) Δ≤Ψ = weaken-sub σ Δ≤Ψ ▸ weaken e Δ≤Ψ
+weaken-sub (σ ▸ e) Δ≤Ψ = (weaken-sub σ Δ≤Ψ) ▸ (weaken e Δ≤Ψ)
+
+weaken₁-sub : ∀ {n m τ}{Δ : Ctx n}{Γ : Ctx m}
+            → Δ     ⊦ Γ sub
+            → Δ ▸ τ ⊦ Γ sub
+weaken₁-sub σ = weaken-sub σ (reflective drop)
+
+id-sub : ∀ {n}{Γ : Ctx n}
+       → Γ ⊦ Γ sub
+id-sub {Γ = ε}     = ε
+id-sub {Γ = Γ ▸ τ} = (weaken₁-sub id-sub) ▸ (var zero)
 
 lookup-sub : ∀ {n m}{Δ : Ctx n}{Γ : Ctx m}
            → Δ ⊦ Γ sub
@@ -47,14 +51,11 @@ subst-term unit      σ = unit
 subst-term (e₁ ⋅ e₂) σ = (subst-term e₁ σ) ⋅
                          (subst-term e₂ σ)
 subst-term {n} {m} {τ₁ ⇾ τ₂} {Δ} {Γ} (ƛ e) σ = ƛ e' where
-  ▸σ : Δ ▸ τ₁ ⊦ Γ sub
-  ▸σ = weaken-sub σ (reflective drop)
-  
-  ▸σ▸ : Δ ▸ τ₁ ⊦ Γ ▸ τ₁ sub
-  ▸σ▸ = ▸σ ▸ var zero
+  σ' : Δ ▸ τ₁ ⊦ Γ ▸ τ₁ sub
+  σ' = (weaken₁-sub σ) ▸ (var zero)
   
   e' : Δ ▸ τ₁ ⊦ τ₂ term
-  e' = subst-term e ▸σ▸
+  e' = subst-term e σ'
 
 subst-sub : ∀ {n m l}{Ψ : Ctx n}{Δ : Ctx m}{Γ : Ctx l}
           → Δ ⊦ Γ sub
