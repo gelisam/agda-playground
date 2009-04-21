@@ -100,3 +100,40 @@ module Nat where
       f : (y : Tag) → (⟦ y ⟧ → Nat) → (⟦ y ⟧ → Nat) → Nat
       f Zero z u = b
       f Succ z u = c (z tt) (u tt)
+
+module List (α : Set) where
+  open import Data.Function
+  open import Data.Sum
+
+  List : Set
+  List = W (⊤ ⊎ α) ⟦_⟧ where
+    ⟦_⟧ : ⊤ ⊎ α → Set
+    ⟦ inj₁ tt ⟧ = ⊥
+    ⟦ inj₂ α  ⟧ = ⊤
+
+  ε : List
+  ε = sup (inj₁ tt) λ()
+
+  infixr 5 _∷_
+  _∷_ : α → List → List
+  _∷_ x xs = sup (inj₂ x) (const xs)
+
+module Vector (α : Set) where
+  open import Data.Function
+  open import Data.Product
+  open import Data.Nat
+
+  Vector : ℕ → Set
+  Vector zero = W ⊤ ⟦_⟧ where
+    ⟦_⟧ : ⊤ → Set
+    ⟦ tt ⟧ = ⊥
+  Vector (suc n) = W (α × Vector n) ⟦_⟧ where
+    ⟦_⟧ : (α × Vector n) → Set
+    ⟦ x , xs ⟧ = ⊥
+
+  ε : Vector zero
+  ε = sup tt λ()
+
+  infixr 5 _∷_
+  _∷_ : ∀ {n} → α → Vector n → Vector (suc n)
+  _∷_ x xs = sup (x , xs) λ()
