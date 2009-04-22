@@ -137,3 +137,40 @@ module Vector (α : Set) where
   infixr 5 _∷_
   _∷_ : ∀ {n} → α → Vector n → Vector (suc n)
   _∷_ x xs = sup (x , xs) λ()
+ 
+-- modelling W-types using W-types
+module W' (α : Set) (⟦_⟧' : α → Set) where
+  open import Data.Function
+  open import Data.Product
+
+  W' : Set
+  W' = W ⊤ ⟦_⟧ where
+    ⟦_⟧ : ⊤ → Set
+    ⟦ tt ⟧ = (a : α) → ⟦ a ⟧'
+
+  sup' : (a : α) → (f : ⟦ a ⟧' → W') → W'
+  sup' a f = sup tt λ g → f (g a)
+
+-- an example using the meta W.
+-- no overhead as compared to the ordinary W, wow!
+module Nat' where
+  open import Data.Function
+
+  data Tag : Set where
+    Zero : Tag
+    Succ : Tag
+
+  ⟦_⟧ : Tag → Set
+  ⟦ Zero ⟧ = ⊥
+  ⟦ Succ ⟧ = ⊤
+
+  open W' Tag ⟦_⟧
+  
+  Nat' : Set
+  Nat' = W'
+
+  zero : Nat'
+  zero = sup' Zero λ()
+
+  succ : Nat' → Nat'
+  succ n = sup' Succ (const n)
