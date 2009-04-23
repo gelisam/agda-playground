@@ -1,3 +1,3 @@
 module Main where
 
-open import Modal
+open import Cont.Pair
