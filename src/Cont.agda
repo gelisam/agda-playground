@@ -12,3 +12,9 @@ fmap : ∀ {S P α β}
      → Cont S P α
      → Cont S P β
 fmap f_ (x ▹ el_) = x ▹ λ p → f el p
+
+cofmap : ∀ {S α β E}
+       → (∀ {x} → β x → α x)
+       → Cont S α E
+       → Cont S β E
+cofmap f_ (x ▹ el_) = x ▹ λ p → el f p
