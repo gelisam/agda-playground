@@ -1,11 +1,11 @@
-module DepCont.Pi where
+module FlatDepCont.Pi where
 
 open import Data.Unit
 open import Data.Fin
-open import DepCont
+open import FlatDepCont
 
 Π : (α : Set) → (α → Set) → Set
-Π α β = DepCont ⊤ α β
+Π α β = FlatDepCont ⊤ α β
 
 make-fun : ∀ {α β}
          → ((x : α) → β x)
