@@ -13,4 +13,4 @@ fmap : ∀ {S P α β}
      → (∀ {s p} → α s p → β s p)
      → DiDepCont S P α
      → DiDepCont S P β
-fmap f_ (s ▹ el_) = s ▹ λ p → f el p
+fmap f_ (s ▹ c_) = s ▹ λ p → f c p

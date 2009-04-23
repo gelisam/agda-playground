@@ -14,4 +14,4 @@ fmap : ∀ {α β}
      → (α → β)
      → FinCont α
      → FinCont β
-fmap f_ (x ▹ el_) = x ▹ λ p → f el p
+fmap f_ (s ▹ c_) = s ▹ λ p → f c p

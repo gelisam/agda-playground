@@ -11,10 +11,10 @@ cofmap : ∀ {S E α β}
        → (β → α)
        → CoCont S α E
        → CoCont S β E
-cofmap f_ (x ▹ el_) = x ▹ λ p → el f p
+cofmap f_ (s ▹ c_) = s ▹ λ p → c f p
 
 fmap : ∀ {S α β E}
-     → (∀ {x} → α x → β x)
+     → (∀ {s} → α s → β s)
      → CoCont S E α
      → CoCont S E β
-fmap f_ (x ▹ el_) = x ▹ λ p → f el p
+fmap f_ (s ▹ c_) = s ▹ λ p → f c p
