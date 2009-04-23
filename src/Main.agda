@@ -1,9 +1,9 @@
 module Main where
 
-open import Cont
-open import CoCont
-open import FinCont
-open import FlatCont
-open import DiCont
-open import DepCont
-open import DiDepCont
+open import Cont.Modal
+open import CoCont.Modal
+open import FinCont.Modal
+open import FlatCont.Modal
+open import DiCont.Modal
+open import DepCont.Modal
+open import DiDepCont.Modal
