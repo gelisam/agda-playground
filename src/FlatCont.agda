@@ -7,21 +7,35 @@ data FlatCont (Shape : Set) (Pos : Set) (Elt : Set) : Set where
       → (Pos → Elt)
       → FlatCont Shape Pos Elt
 
-fmap : ∀ {S P α β}
-     → (α → β)
-     → FlatCont S P α
-     → FlatCont S P β
-fmap f_ (s ▹ c_) = s ▹ λ p → f c p
+fmap : ∀ {S P E₁ E₂}
+     → (E₁ → E₂)
+     → FlatCont S P E₁
+     → FlatCont S P E₂
+fmap fe_ (s ▹ c_) = s ▹ λ p → fe c p
 
-cofmap : ∀ {S α β E}
-       → (β → α)
-       → FlatCont S α E
-       → FlatCont S β E
-cofmap f_ (s ▹ c_) = s ▹ λ p → c f p
+pmap : ∀ {S P₁ P₂ E}
+       → (P₂ → P₁) -- contravariant!
+       → FlatCont S P₁ E
+       → FlatCont S P₂ E
+pmap fp_ (s ▹ c_) = s ▹ λ p → c fp p
 
-difmap : ∀ {S α β}
-       → (α → β)
-       → (β → α)
-       → FlatCont S α α
-       → FlatCont S β β
-difmap f_ f⁻¹_ (s ▹ c_) = s ▹ λ p → f c f⁻¹ p
+dimap : ∀ {S P₁ P₂ E₁ E₂}
+      → (P₂ → P₁) -- contravariant!
+      → (E₁ → E₂)
+      → FlatCont S P₁ E₁
+      → FlatCont S P₂ E₂
+dimap fp_ fe_ (s ▹ c_) = s ▹ λ p → fe c fp p
+
+smap : ∀ {S₁ S₂ P E}
+     → (S₁ → S₂)
+     → FlatCont S₁ P E
+     → FlatCont S₂ P E
+smap fs (s ▹ c) = fs s ▹ c
+
+dismap : ∀ {S₁ S₂ P₁ P₂ E₁ E₂}
+       → (S₁ → S₂)
+       → (P₂ → P₁) -- contravariant!
+       → (E₁ → E₂)
+       → FlatCont S₁ P₁ E₁
+       → FlatCont S₂ P₂ E₂
+dismap fs fp_ fe_ (s ▹ c_) = fs s ▹ λ p → fe c fp p

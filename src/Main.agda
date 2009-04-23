@@ -1,4 +1,9 @@
 module Main where
 
-open import FlatDepCont.Modal
-open import FlatDepCont.Pi
+open import FlatCont
+open import Cont
+open import FinCont
+open import CoCont
+open import FlatDepCont
+open import DiCont
+open import DiDepCont

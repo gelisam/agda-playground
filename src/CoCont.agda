@@ -7,14 +7,29 @@ data CoCont (Shape : Set) (Pos : Set) (Elt : Shape → Set) : Set where
       → (Pos → Elt shape)
       → CoCont Shape Pos Elt
 
-cofmap : ∀ {S E α β}
-       → (β → α)
-       → CoCont S α E
-       → CoCont S β E
-cofmap f_ (s ▹ c_) = s ▹ λ p → c f p
+fmap : ∀ {S P E₁ E₂}
+     → (∀ {s} → E₁ s → E₂ s)
+     → CoCont S P E₁
+     → CoCont S P E₂
+fmap fe_ (s ▹ c_) = s ▹ λ p → fe c p
 
-fmap : ∀ {S α β E}
-     → (∀ {s} → α s → β s)
-     → CoCont S E α
-     → CoCont S E β
-fmap f_ (s ▹ c_) = s ▹ λ p → f c p
+pmap : ∀ {S P₁ P₂ E}
+       → (P₂ → P₁) -- contravariant!
+       → CoCont S P₁ E
+       → CoCont S P₂ E
+pmap fp_ (s ▹ c_) = s ▹ λ p → c fp p
+
+dimap : ∀ {S P₁ P₂ E₁ E₂}
+      → (P₂ → P₁) -- contravariant!
+      → (∀ {s} → E₁ s → E₂ s)
+      → CoCont S P₁ E₁
+      → CoCont S P₂ E₂
+dimap fp_ fe_ (s ▹ c_) = s ▹ λ p → fe c fp p
+
+dismap : ∀ {S₁ S₂ P₁ P₂ E₁ E₂}
+       → (fs : S₁ → S₂)
+       → (P₂ → P₁) -- contravariant!
+       → (∀ {s} → E₁ s → E₂ (fs s))
+       → CoCont S₁ P₁ E₁
+       → CoCont S₂ P₂ E₂
+dismap fs fp_ fe_ (s ▹ c_) = fs s ▹ λ p → fe c fp p
