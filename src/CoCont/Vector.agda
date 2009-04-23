@@ -1,10 +1,8 @@
 module CoCont.Vector (α : Set) where
 
 open import Data.Unit
-open import Data.Empty
 open import Data.Nat
 open import Data.Fin
-open import Data.Product
 open import CoCont
 
 Vector : ℕ → Set

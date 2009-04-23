@@ -1,14 +1,12 @@
 module Cont.Vector (α : Set) where
 
 open import Data.Unit
-open import Data.Empty
 open import Data.Nat
-open import Data.Product
+open import Data.Fin
 open import Cont
 
 Vector : ℕ → Set
-Vector zero    = Cont ⊤              (λ _ → ⊥) α
-Vector (suc n) = Cont (α × Vector n) (λ _ → ⊥) α
+Vector n = Cont ⊤ (λ _ → Fin n) α
 
 [] : Vector zero
 [] = tt ▹ λ()
@@ -18,4 +16,7 @@ _∷_ : ∀ {n}
     → α
     → Vector n
     → Vector (suc n)
-x ∷ xs = (x , xs) ▹ λ()
+_∷_ {n} x (tt ▹ lookup) = tt ▹ lookup′ where
+  lookup′ : Fin (suc n) → α
+  lookup′ zero    = x
+  lookup′ (suc i) = lookup i

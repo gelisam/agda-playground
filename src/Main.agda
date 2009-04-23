@@ -1,7 +1,6 @@
 module Main where
 
-open import FlatCont.List
+open import Cont.Vector
+open import FinCont.Vector
+open import CoCont.Vector
 open import FlatCont.Vector
-open import FlatCont.BinTree
-open import FlatCont.Fun
-open import FlatCont.Pair

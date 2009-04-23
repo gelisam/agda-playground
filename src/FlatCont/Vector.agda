@@ -1,10 +1,8 @@
 module FlatCont.Vector (α : Set) where
 
 open import Data.Unit
-open import Data.Empty
 open import Data.Nat
 open import Data.Fin
-open import Data.Product
 open import FlatCont
 
 Vector : ℕ → Set
