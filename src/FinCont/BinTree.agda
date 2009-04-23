@@ -1,12 +1,12 @@
-module FCont.BinTree (α : Set) where
+module FinCont.BinTree (α : Set) where
 
 open import Data.Nat
 open import Data.Fin renaming (_+_ to _+F_)
-open import FCont
+open import FinCont
 open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
--- with FCont, the encoding is complicated
+-- with FinCont, the encoding is complicated
 -- by the transformation to and from ℕ, but it is possible
 
 data BinTree0 : Set where
@@ -20,7 +20,7 @@ count leaf0 = 1
 count (node0 L R) = count L + count R
 
 BinTree : Set
-BinTree = FCont BinTree0 count α
+BinTree = FinCont BinTree0 count α
 
 leaf : α → BinTree
 leaf x = leaf0 ▹ child where

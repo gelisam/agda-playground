@@ -1,14 +1,14 @@
-module FCont.Vector (α : Set) where
+module FinCont.Vector (α : Set) where
 
 open import Data.Unit
 open import Data.Nat
 open import Data.Fin
 open import Data.Product
-open import FCont
+open import FinCont
 
 Vector : ℕ → Set
-Vector zero    = FCont ⊤              (λ _ → 0) α
-Vector (suc n) = FCont (α × Vector n) (λ _ → 0) α
+Vector zero    = FinCont ⊤              (λ _ → 0) α
+Vector (suc n) = FinCont (α × Vector n) (λ _ → 0) α
 
 [] : Vector zero
 [] = tt ▹ ⟦_⟧ where

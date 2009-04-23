@@ -1,11 +1,11 @@
-module FCont.Pair where
+module FinCont.Pair where
 
 open import Data.Unit
 open import Data.Fin
-open import FCont
+open import FinCont
 
 Pair : Set → Set → Set
-Pair α β = FCont α (λ _ → 1) β
+Pair α β = FinCont α (λ _ → 1) β
 
 make-pair : ∀ {α β}
           → α

@@ -1,11 +1,11 @@
-module FCont.List (α : Set) where
+module FinCont.List (α : Set) where
 
 open import Data.Nat
 open import Data.Fin
-open import FCont
+open import FinCont
 
 List : Set
-List = FCont ℕ (λ x → x) α
+List = FinCont ℕ (λ x → x) α
 
 [] : List
 [] = 0 ▹ ⟦_⟧ where
