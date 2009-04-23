@@ -1,4 +1,4 @@
 module Main where
 
-open import CoCont.Sigma
-open import DiCont.Sigma
+open import DepCont.Pi
+open import DiDepCont.Pi
