@@ -8,7 +8,7 @@ open import Data.Product
 open import CoCont
 
 Vector : ℕ → Set
-Vector n = CoCont ⊤ (λ _ → α) (Fin n)
+Vector n = CoCont ⊤ (Fin n) (λ _ → α)
 
 [] : Vector zero
 [] = tt ▹ λ()

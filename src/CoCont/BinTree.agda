@@ -18,7 +18,7 @@ data Leaves : BinTree0 → Set where
         → Leaves (node0 L R)
 
 BinTree : Set
-BinTree = CoCont BinTree0 Leaves ⊤
+BinTree = CoCont BinTree0 ⊤ Leaves
 
 leaf : α → BinTree
 leaf x = leaf0 ▹ child where

@@ -1,14 +1,14 @@
-module Cont (Shape : Set) (Pos : Shape → Set) where
+module Cont where
 
 
 infix 5 _▹_
-data Cont (α : Set) : Set where
+data Cont (Shape : Set) (Pos : Shape → Set) (Elt : Set) : Set where
   _▹_ : (shape : Shape)
-      → (Pos shape → α)
-      → Cont α
+      → (Pos shape → Elt)
+      → Cont Shape Pos Elt
 
-fmap : ∀ {α β}
+fmap : ∀ {S P α β}
      → (α → β)
-     → Cont α
-     → Cont β
+     → Cont S P α
+     → Cont S P β
 fmap f_ (x ▹ el_) = x ▹ λ p → f el p

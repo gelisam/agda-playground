@@ -6,7 +6,7 @@ open import Data.Vec
 open import CoCont
 
 List : Set
-List = CoCont ℕ (Vec α) ⊤
+List = CoCont ℕ ⊤ (Vec α)
 
 []L : List
 []L = 0 ▹ (λ _ → [])

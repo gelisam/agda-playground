@@ -5,7 +5,7 @@ open import Data.Fin
 open import CoCont
 
 Fun : Set → Set → Set
-Fun α β = CoCont ⊤ (λ _ → β) α
+Fun α β = CoCont ⊤ α (λ _ → β)
 
 make-fun : ∀ {α β}
          → (α → β)

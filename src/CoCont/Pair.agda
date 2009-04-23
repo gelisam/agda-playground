@@ -5,7 +5,7 @@ open import Data.Fin
 open import CoCont
 
 Pair : Set → Set → Set
-Pair α β = CoCont α (λ _ → β) ⊤
+Pair α β = CoCont α ⊤ (λ _ → β)
 
 make-pair : ∀ {α β}
           → α
