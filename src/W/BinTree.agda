@@ -1,5 +1,5 @@
 -- Example, Binary Trees as an instance of a W-type
-module BinTree where
+module W.BinTree where
 open import Data.Nat
 open import Data.Empty
 open import Data.Unit

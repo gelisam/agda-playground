@@ -1,6 +1,6 @@
 -- an example using the meta W.
 -- no overhead as compared to the ordinary W, wow!
-module Meta.Nat where
+module W.W.Nat where
 
 open import Data.Empty
 open import Data.Unit

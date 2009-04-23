@@ -1,5 +1,5 @@
 -- modelling W-types using W-types
-module Meta (α : Set) (⟦_⟧' : α → Set) where
+module W.W (α : Set) (⟦_⟧' : α → Set) where
 
 open import Data.Product
 open import Data.Empty

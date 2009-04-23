@@ -1,4 +1,4 @@
-module List (α : Set) where
+module W.List (α : Set) where
 open import Data.Empty
 open import Data.Unit
 open import Data.Function

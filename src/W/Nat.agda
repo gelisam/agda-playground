@@ -1,4 +1,4 @@
-module Nat where
+module W.Nat where
 
 open import Data.Empty
 open import Data.Unit

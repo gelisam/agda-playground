@@ -1,4 +1,4 @@
-module Meta.Cont (Shape : Set) (Pos : Shape → Set) where
+module W.Cont (Shape : Set) (Pos : Shape → Set) where
 
 open import Data.Empty
 open import Data.Product

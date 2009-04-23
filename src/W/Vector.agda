@@ -1,4 +1,4 @@
-module Vector (α : Set) where
+module W.Vector (α : Set) where
 open import Data.Product
 open import Data.Nat
 open import Data.Empty
