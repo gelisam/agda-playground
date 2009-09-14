@@ -108,8 +108,46 @@ And⊣Arr {X} {A} {B} = left , right where
   right f (x , a) = f a x
 
 
-Quantifier# : Set → Cat
-Quantifier# W = record
-              { #      = W → Set
-              ; _[_⇾_] = λ A B → (w : W) → A w → B w
-              }
+Pred# : Set → Cat
+Pred# W = record
+        { #      = W → Set
+        ; _[_⇾_] = λ A B → (w : W) → A w → B w
+        }
+
+Exists : (W : Set)
+       → Functor (Pred# W) Set#
+Exists W = record
+         { tmap = λ A → Σ W A
+         ; fmap = λ f x → proj₁ x , f (proj₁ x) (proj₂ x)
+         }
+
+Forall : (W : Set)
+       → Functor (Pred# W) Set#
+Forall W = record
+         { tmap = λ A → (w : W) → A w
+         ; fmap = λ f x w → f w (x w)
+         }
+
+Weaken : (W : Set)
+       → Functor Set# (Pred# W)
+Weaken W = record
+         { tmap = λ A w → A
+         ; fmap = λ f w x → f x
+         }
+Exists⊣Weaken : {W : Set}
+              → Exists W ⊣ Weaken W
+Exists⊣Weaken {W} {A} {B} = left , right where
+  left : (Σ W A → B) → (w : W) → A w → B
+  left f w a = f (w , a)
+  
+  right : ((w : W) → A w → B) → Σ W A → B
+  right f (w , a) = f w a
+
+Weaken⊣Forall : {W : Set}
+              → Weaken W ⊣ Forall W
+Weaken⊣Forall {W} {A} {B} = left , right where
+  left : ((w : W) → A → B w) → A → (w : W) → B w
+  left f a w = f w a
+  
+  right : (A → (w : W) → B w) → (w : W) → A → B w
+  right f w a = f a w
