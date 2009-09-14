@@ -84,6 +84,29 @@ _◃_ S P = record
   right : (A → ⊤ ◃ X ⋅ B) → X ◃ ⊤ ⋅ A → B
   right f (x , const-a) = proj₂ (f (const-a tt)) x
 
+And : (X : Set)
+    → Functor Set# Set#
+And X = record
+      { tmap = λ A → X × A
+      ; fmap = λ f x → proj₁ x , f (proj₂ x)
+      }
+
+Arr : (X : Set)
+    → Functor Set# Set#
+Arr X = record
+      { tmap = λ A → X → A
+      ; fmap = λ f x → f ∘ x
+      }
+
+And⊣Arr : ∀ {X}
+        → And X ⊣ Arr X
+And⊣Arr {X} {A} {B} = left , right where
+  left : (And X ⋅ A → B) → A → Arr X ⋅ B
+  left f a = λ x → f (x , a)
+  
+  right : (A → Arr X ⋅ B) → And X ⋅ A → B
+  right f (x , a) = f a x
+
 
 record Quantifier : Set1 where
   field
@@ -95,6 +118,6 @@ Quantifier# = record
    { ∥_∥ = Quantifier
    ; val = λ q
          → let open Quantifier q
-        in Σ universe λ u
+        in Σ universe  λ u
            → predicate u
    }
