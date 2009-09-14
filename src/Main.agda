@@ -8,23 +8,23 @@ open import Relation.Nullary
 
 record Cat : Set2 where
   field
-    ∥_∥ : Set1
-    val : ∥_∥ → Set
+    #      : Set1
+    _[_⇾_] : # → # → Set
 open Cat
 
 record Functor (A# B# : Cat) : Set1 where
   field
-    tmap : ∥ A# ∥ → ∥ B# ∥
-    fmap : {A₁ A₂ : ∥ A# ∥}
-         → (val A#       A₁  → val A#       A₂ )
-         → (val B# (tmap A₁) → val B# (tmap A₂))
+    tmap : # A# → # B#
+    fmap : {A₁ A₂ : # A#}
+         → A# [      A₁ ⇾      A₂ ]
+         → B# [ tmap A₁ ⇾ tmap A₂ ]
 open Functor
 
 infix 1 _⋅_
 _⋅_ : ∀ {A# B#}
     → (F : Functor A# B#)
-    → ∥ A# ∥
-    → ∥ B# ∥
+    → # A#
+    → # B#
 _⋅_ = tmap
 
 infix 0 _⊣_
@@ -33,14 +33,14 @@ _⊣_ : ∀ {A# B#}
     → (G : Functor B# A#)
     → Set1
 _⊣_ {A#} {B#} F G = ∀ {A B}
-                  → (val B# (F ⋅ A) → val B#      B )
-                  ⇔ (val A#      A  → val A# (G ⋅ B))
+                  → B# [ F ⋅ A ⇾     B ]
+                  ⇔ A# [     A ⇾ G ⋅ B ]
 
 
 Set# : Cat
 Set# = record
-     { ∥_∥ = Set
-     ; val = λ x → x
+     { #      = Set
+     ; _[_⇾_] = λ A B → A → B
      }
 
 Double : Functor Set# Set#
@@ -108,16 +108,8 @@ And⊣Arr {X} {A} {B} = left , right where
   right f (x , a) = f a x
 
 
-record Quantifier : Set1 where
-  field
-    universe  : Set
-    predicate : universe → Set
-
-Quantifier# : Cat
-Quantifier# = record
-   { ∥_∥ = Quantifier
-   ; val = λ q
-         → let open Quantifier q
-        in Σ universe  λ u
-           → predicate u
-   }
+Quantifier# : Set → Cat
+Quantifier# W = record
+              { #      = W → Set
+              ; _[_⇾_] = λ A B → (w : W) → A w → B w
+              }
