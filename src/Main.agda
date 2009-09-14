@@ -8,8 +8,8 @@ open import Relation.Nullary
 
 record Cat : Set2 where
   field
-    #      : Set1
-    _[_⇾_] : # → # → Set
+    #      : Set1         -- objects
+    _[_⇾_] : # → # → Set  -- morphisms
 open Cat
 
 record Functor (A# B# : Cat) : Set1 where
@@ -20,6 +20,7 @@ record Functor (A# B# : Cat) : Set1 where
          → B# [ tmap A₁ ⇾ tmap A₂ ]
 open Functor
 
+-- syntactic sugar
 infix 1 _⋅_
 _⋅_ : ∀ {A# B#}
     → (F : Functor A# B#)
@@ -27,6 +28,7 @@ _⋅_ : ∀ {A# B#}
     → # B#
 _⋅_ = tmap
 
+-- adjunctions
 infix 0 _⊣_
 _⊣_ : ∀ {A# B#}
     → (F : Functor A# B#)
@@ -36,6 +38,8 @@ _⊣_ {A#} {B#} F G = ∀ {A B}
                   → B# [ F ⋅ A ⇾     B ]
                   ⇔ A# [     A ⇾ G ⋅ B ]
 
+
+-- examples in the category of sets
 
 Set# : Cat
 Set# = record
@@ -65,7 +69,7 @@ Double⊣Square {A} {B} = left , right where
   right f (inj₁ a) = proj₁ (f a)
   right f (inj₂ a) = proj₂ (f a)
 
--- Containers
+-- containers
 infix 2 _◃_
 _◃_ : (S P : Set)
     → Functor Set# Set#
@@ -107,6 +111,8 @@ And⊣Arr {X} {A} {B} = left , right where
   right : (A → Arr X ⋅ B) → And X ⋅ A → B
   right f (x , a) = f a x
 
+
+-- examples in the category of predicates
 
 Pred# : Set → Cat
 Pred# W = record
