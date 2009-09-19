@@ -6,8 +6,6 @@ open import Category.SetC.Container
 open import Category.Pred.Quantifier
 
 
-open import Data.Function
-
 open import Category
 open import Functor
 
@@ -17,17 +15,6 @@ XForm : {A# B# : Cat}
       → Set1
 XForm {A#} {B#} F G = (A : # A#)
                     → B# [ F ⋅ A ⇾ G ⋅ A ]
-
--- functor composition
-infix 2 _⋅∘⋅_
-_⋅∘⋅_ : {A# B# C# : Cat}
-      → Functor B# C#
-      → Functor A# B#
-      → Functor A# C#
-_⋅∘⋅_ {A#} {B#} {C#} F G = record
-                         { tmap = λ A → F ⋅ (G ⋅ A)
-                         ; fmap = fmap F ∘ fmap G
-                         }
 
 record Ran (A# B# C# : Cat)
            (F : Functor A# B#)
