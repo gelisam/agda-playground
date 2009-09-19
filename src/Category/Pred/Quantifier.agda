@@ -47,3 +47,20 @@ Weaken⊣Forall {W} {A} {B} = left , right where
   
   right : (A → (w : W) → B w) → (w : W) → A → B w
   right f w a = f a w
+
+
+-- λ A → W × A
+And : (W : Set)
+    → Functor Set# Set#
+And W = Exists W ⋅∘⋅ Weaken W
+
+-- λ A → W → A
+Arr : (W : Set)
+    → Functor Set# Set#
+Arr W = Forall W ⋅∘⋅ Weaken W
+
+And⊣Arr : {W : Set}
+        → AndK W ⊣ ArrK W
+And⊣Arr {W} = ∘-preserves-⊣ (Exists W) (Weaken W) (Forall W) (Weaken W)
+                (λ {A} {B} → Exists⊣Weaken {W} {A} {B})
+                (λ {A} {B} → Weaken⊣Forall {W} {A} {B})
