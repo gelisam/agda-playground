@@ -41,13 +41,22 @@ _⋅⊎⋅_ : # Set#
       → # Set#
 A ⋅⊎⋅ B = Either ⋅ (A , B)
 
-Either⊣Δ : Either ⊣ Δ
-Either⊣Δ {A₁ , A₂} {B} = left , right where
-  left : (A₁ ⊎ A₂ → B) → (A₁ → B) × (A₂ → B)
+Either⊣Δ : Adj (Set# ²) Set#
+Either⊣Δ = record
+         { F   = Either
+         ; G   = Δ
+         ; F⊣G = λ {A B} → left  {proj₁₁₁ A} {proj₁₁₂ A} {B}
+         ; G⊢F = λ {A B} → right {proj₁₁₁ A} {proj₁₁₂ A} {B}
+         } where
+  left : ∀ {A₁ A₂ B}
+       → (A₁ ⊎ A₂ → B)
+       → (A₁ → B) × (A₂ → B)
   left f = f ∘ inj₁
          , f ∘ inj₂
   
-  right : (A₁ → B) × (A₂ → B) → A₁ ⊎ A₂ → B
+  right : ∀ {A₁ A₂ B}
+        → (A₁ → B) × (A₂ → B)
+        → A₁ ⊎ A₂ → B
   right (f₁ , f₂) (inj₁ a) = f₁ a
   right (f₁ , f₂) (inj₂ a) = f₂ a
 
@@ -66,24 +75,37 @@ _⋅×⋅_ : # Set#
       → # Set#
 A ⋅×⋅ B = Times ⋅ (A , B)
 
-Δ⊣Times : Δ ⊣ Times
-Δ⊣Times {A} {B₁ , B₂} = left , right where
-  left : (A → B₁) × (A → B₂) → A → B₁ × B₂
+Δ⊣Times : Adj Set# (Set# ²)
+Δ⊣Times = record
+        { F   = Δ
+        ; G   = Times
+        ; F⊣G = λ {A B} → left  {A} {proj₁₁₁ B} {proj₁₁₂ B}
+        ; G⊢F = λ {A B} → right {A} {proj₁₁₁ B} {proj₁₁₂ B}
+        } where
+  left : ∀ {A B₁ B₂}
+       → (A → B₁) × (A → B₂) → A → B₁ × B₂
   left (f₁ , f₂) a = f₁ a
                    , f₂ a
   
-  right : (A → B₁ × B₂) → (A → B₁) × (A → B₂)
+  right : ∀ {A B₁ B₂}
+        → (A → B₁ × B₂) → (A → B₁) × (A → B₂)
   right f = proj₁ ∘ f
           , proj₂ ∘ f
 
 
 Double : Functor Set# Set#
-Double = Either ⋅∘⋅ Δ
+Double = record
+       { tmap = λ A → A ⊎ A
+       ; fmap = λ f → Data.Sum.map f f
+       }
 
 Square : Functor Set# Set#
-Square = Times ⋅∘⋅ Δ
+Square = record
+       { tmap = λ A → A × A
+       ; fmap = λ f → Data.Product.map f f
+       }
 
-Double⊣Square : Double ⊣ Square
-Double⊣Square = ∘-preserves-⊣ Either Δ Times Δ
-                  (λ {A} {B} → Either⊣Δ {A} {B})
-                  (λ {A} {B} → Δ⊣Times  {A} {B})
+Double⊣Square : Adj Set# Set#
+Double⊣Square = adjunction Double ⊣ Square
+                defined-by (Either⊣Δ ⊣∘⊣ Δ⊣Times)
+                indeed
