@@ -9,10 +9,6 @@ deps: src/find_deps.rb
 
 include deps
 
-crumbs/%.m4: src/%.m4
-	mkdir -p $(dir $@)
-	cp $< $@
-
 test: crumbs/Main.agda
 	cd crumbs; agda --include-path=. --include-path=$(HOME)/lib/agda \
 	  Main.agda

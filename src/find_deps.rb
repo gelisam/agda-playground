@@ -13,12 +13,17 @@ Dir["src/**/*.agda"].each {|filename|
   m4_dependencies = dependencies.select {|d|
     File.exists?("src/#{d}.m4")
   }.map {|d|
-    "crumbs/#{d}.m4"
+    "src/#{d}.m4"
   }
   
   agda_file = "crumbs/#{filename.gsub(/^src\//, "")}"
   dependencies = [filename] + agda_dependencies + m4_dependencies
+  m4_files = m4_dependencies.join(" ")
+  m4_len = 1
+  m4_dependencies.each {|f|
+    m4_len += File.readlines(f).length
+  }
   puts "#{agda_file}: #{dependencies.join(" ")}"
   puts "\tmkdir -p #{File.dirname(agda_file)}"
-  puts "\tm4 #{m4_dependencies.join(" ")} $< > $@"
+  puts "\tm4 #{m4_files} $< | tail -n +#{m4_len} > $@"
 }
