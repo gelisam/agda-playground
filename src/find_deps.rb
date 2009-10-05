@@ -5,15 +5,20 @@ Dir["src/**/*.agda"].each {|filename|
   } + File.readlines(filename).grep(/^import /).map {|line|
     line.chomp.split(/[( )]/)[1].gsub(".", "/")
   }
-  dependencies = dependencies.select {|d|
+  agda_dependencies = dependencies.select {|d|
     File.exists?("src/#{d}.agda")
   }.map {|d|
     "crumbs/#{d}.agda"
   }
+  m4_dependencies = dependencies.select {|d|
+    File.exists?("src/#{d}.m4")
+  }.map {|d|
+    "crumbs/#{d}.m4"
+  }
   
   agda_file = "crumbs/#{filename.gsub(/^src\//, "")}"
-  dependencies = [filename] + dependencies
+  dependencies = [filename] + agda_dependencies + m4_dependencies
   puts "#{agda_file}: #{dependencies.join(" ")}"
   puts "\tmkdir -p #{File.dirname(agda_file)}"
-  puts "\tm4 < $< > $@"
+  puts "\tm4 #{m4_dependencies.join(" ")} $< > $@"
 }
