@@ -1,6 +1,6 @@
 module Main where
 
-open import Data.Unit
+open import Data.Unit renaming (_≟_ to ⊤-eq)
 open import Data.Empty
 open import Data.Nat
 open import Data.Sum
@@ -58,3 +58,12 @@ module Lambda where
   countV {Γ} eq? x (app e₁ e₂) = countV eq? x e₁ +
                                  countV eq? x e₂
   countV {Γ} eq? x (lam e)     = countV (weaken-eq eq?) (inj₁ x) e
+  
+  term₁ : Term (Ctx 1)
+  term₁ = hoas λ _ x
+        → app (lam (hoas λ _ y
+                         → weaken x))
+              (app x x)
+  
+  assert₁ : countV open-eq (inj₂ _) term₁ ≡ 3
+  assert₁ = refl
