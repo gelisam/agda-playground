@@ -15,5 +15,5 @@ Dir["src/**/*.agda"].each {|filename|
   dependencies = [filename] + dependencies
   puts "#{agda_file}: #{dependencies.join(" ")}"
   puts "\tmkdir -p #{File.dirname(agda_file)}"
-  puts "\tcp $< $@"
+  puts "\tm4 < $< > $@"
 }
