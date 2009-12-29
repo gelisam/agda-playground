@@ -15,8 +15,8 @@ lexicographic {A} {B} tA tB = record
                             ; valid   = valid
                             } where
   compare : (xx yy : Σ A B) → Compare xx yy
-  compare (x , u) (y , v) with Total.compare tA x y
-  ... | lt .x .y = lt (x , u) (y , v)
+  compare (x , _) (y , _) with Total.compare tA x y
+  ... | lt .x .y = lt _ _
   ... | gt .x .y = gt _ _
   compare (.a , x) (.a , y) | eq a with Total.compare (tB a) x y
   ...   | lt .x .y = lt _ _
