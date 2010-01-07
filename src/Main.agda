@@ -5,10 +5,11 @@ open import Data.Product
 open import Refl
 open import Unit
 open import Total
+open import Delay
 open import Lexicographic
 
 
-data PlainDesc : Set₁ where
+data PlainDesc : Set1 where
   arg : ∀ A → Total A → (A → PlainDesc) → PlainDesc
   ret :                                   PlainDesc
 
