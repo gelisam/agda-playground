@@ -38,12 +38,28 @@ NatDesc = arg NatCon total-NatCon case-con where
 ℕ = ⟦ NatDesc ⟧
 
 two : ℕ
-two = arg suc
+two = (arg suc
         (arg suc
-          (arg zero ret))
+          (arg zero ret)))
 
 three : ℕ
-three = arg suc
+three = (arg suc
           (arg suc
             (arg suc
-              (arg zero ret)))
+              (arg zero ret))))
+
+&ℕ = ⟦ & NatDesc ⟧
+
+two,three : &ℕ
+two,three = (arg eq (arg suc
+              (arg eq (arg suc
+                (arg lt (arg zero (arg suc (arg refl
+                  (arg zero ret)))))))))
+
+add : &ℕ → ℕ
+add (arg eq (arg zero ret))                     = arg zero ret
+add (arg eq (arg suc xy))                       = arg suc (arg suc (add xy))
+add (arg lt (arg zero (arg suc  (arg refl y)))) = y
+add (arg lt (arg zero (arg zero (arg () y))))
+add (arg lt (arg suc  (arg zero (arg () y))))
+add (arg lt (arg suc  (arg suc  (arg () y))))
