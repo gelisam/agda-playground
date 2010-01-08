@@ -31,8 +31,8 @@ total-NatCon = record
 NatDesc : DelayDesc
 NatDesc = arg NatCon total-NatCon case-con where
   case-con : NatCon → ∞₁ DelayDesc
-  case-con zero ~ ♯₁ ret
-  case-con suc  ~ ♯₁ NatDesc
+  case-con zero = ♯₁ ret
+  case-con suc  = ♯₁ NatDesc
 
 ℕ = ⟦ NatDesc ⟧
 
