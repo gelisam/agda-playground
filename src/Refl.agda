@@ -17,3 +17,6 @@ total-≡ {A} {x} {y} = record
   valid : (xx yy : x ≡ y) → compare xx yy ≡ uncompare (compare yy xx)
   valid _ _ with x | y
   valid refl refl | .x | x = refl
+
+≡-always-≡ : ∀ {A} {x y : A} {p q : x ≡ y} → p ≡ q
+≡-always-≡ {A} {.x} {x} {refl} {refl} = refl
