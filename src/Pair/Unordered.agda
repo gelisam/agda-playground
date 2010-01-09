@@ -1,20 +1,13 @@
-module Main where
-
-open import Examples.Nat
-
+module Pair.Unordered where
 
 open import Coinduction
+open import Relation.Binary.PropositionalEquality1
+open import Relation.Binary.HeterogeneousEquality
 
 open import Refl
 open import Total
 open import Desc
-
-
-_,_ : DelayDesc → DelayDesc → DelayDesc
-ret        , b = b
-arg A tA d , b = arg A tA d′ where
-  d′ : A → ∞₁ DelayDesc
-  d′ a = ♯₁ ♭₁ (d a) , b
+open import Pair
 
 
 data &Tag : Set where
@@ -47,4 +40,4 @@ total-&Tag = record
   case-tag lt = ♯₁ arg A tA λ x
               → ♯₁ arg A tA λ y
               → ♯₁ arg (Total.compare tA x y ≡ lt x y) total-≡ λ _
-              → ♯₁ ♭₁ (d x) , ♭₁ (d y)
+              → ♯₁ ♭₁ (d x) × ♭₁ (d y)
