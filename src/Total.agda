@@ -1,5 +1,6 @@
 module Total where
 
+open import Data.Empty
 open import Relation.Binary.PropositionalEquality
 
 
@@ -30,3 +31,9 @@ record Total (A : Set) : Set where
   gt-lt {x}  {y}  refl | gt .x .y | gt .y .x | ()
   gt-lt {.a} {.a} refl | gt .a .a | eq a     | ()
   gt-lt {x}  {y}  refl | gt .x .y | lt .y .x | refl = refl
+  
+  postulate
+    lt-lt : ∀ x y
+          → compare x y ≡ lt x y
+          → compare y x ≡ lt y x
+          → ⊥

@@ -1,8 +1,9 @@
 module Pair.Unordered where
 
+open import Data.Empty
 open import Coinduction
-open import Relation.Binary.PropositionalEquality1
-open import Relation.Binary.HeterogeneousEquality
+open import Relation.Binary.PropositionalEquality1 hiding (sym)
+-- open import Relation.Binary.HeterogeneousEquality
 
 open import Refl
 open import Total
@@ -41,3 +42,22 @@ total-&Tag = record
               → ♯₁ arg A tA λ y
               → ♯₁ arg (Total.compare tA x y ≡ lt x y) total-≡ λ _
               → ♯₁ ♭₁ (d x) × ♭₁ (d y)
+
+drop-order : ∀ {A} → ⟦ A ⟧ → ⟦ A ⟧ → ⟦ & A ⟧
+drop-order {ret} ret ret = ret
+drop-order {arg A tA d} (arg x u) (arg y v) with inspect (Total.compare tA x y)
+... | lt .x .y with-≡ p = arg lt (arg x (arg y (arg q (u , v)))) where q = sym p
+... | gt .x .y with-≡ p = arg lt (arg y (arg x (arg q (v , u)))) where q = Total.gt-lt tA (sym p)
+drop-order {arg A tA d} (arg .a u) (arg .a v) | eq a with-≡ p = arg eq (arg a (drop-order u v))
+
+-- dup : (A : Set) → A → Σ A × A λ p → fst p ≡ snd p
+
+drop-order-commutes : ∀ {A} x y
+                    →  drop-order {A} x y
+                    ≡₁ drop-order {A} y x
+drop-order-commutes {ret} ret ret = refl
+drop-order-commutes {arg A tA d} (arg x u) (arg y v) with inspect (Total.compare tA x y)
+                                                        | inspect (Total.compare tA y x)
+... | lt .x .y with-≡ p | lt .y .x with-≡ q = ⊥-elim (Total.lt-lt tA x y p q)
+... | lt .x .y with-≡ p | gt .y .x with-≡ q = cong₀₁ (λ r → arg lt (arg x (arg y (arg r (u , v))))) ≡-always-≡
+... | gt .x .y with-≡ p | lt .y .x with-≡ q = cong₀₁ (λ r → arg lt (arg y (arg x (arg r (v , u))))) ≡-always-≡
