@@ -1,6 +1,7 @@
 module Examples.Nat where
 
 open import Coinduction
+open import Relation.Binary.PropositionalEquality1
 
 open import Refl
 open import Total
@@ -63,3 +64,9 @@ add (arg lt (arg zero (arg suc  (arg refl y)))) = y
 add (arg lt (arg zero (arg zero (arg () y))))
 add (arg lt (arg suc  (arg zero (arg () y))))
 add (arg lt (arg suc  (arg suc  (arg () y))))
+
+_+_ : ℕ → ℕ → ℕ
+x + y = add (drop-order x y)
+
+add-commutes : ∀ x y → x + y ≡₁ y + x
+add-commutes = &commutes add

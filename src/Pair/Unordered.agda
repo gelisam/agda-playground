@@ -2,7 +2,7 @@ module Pair.Unordered where
 
 open import Data.Empty
 open import Coinduction
-open import Relation.Binary.PropositionalEquality1 hiding (sym)
+open import Relation.Binary.PropositionalEquality1 renaming (sym to sym₁; cong to cong₁₁)
 -- open import Relation.Binary.HeterogeneousEquality
 
 open import Refl
@@ -48,9 +48,8 @@ drop-order {ret} ret ret = ret
 drop-order {arg A tA d} (arg x u) (arg y v) with inspect (Total.compare tA x y)
 ... | lt .x .y with-≡ p = arg lt (arg x (arg y (arg q (u , v)))) where q = sym p
 ... | gt .x .y with-≡ p = arg lt (arg y (arg x (arg q (v , u)))) where q = Total.gt-lt tA (sym p)
-drop-order {arg A tA d} (arg .a u) (arg .a v) | eq a with-≡ p = arg eq (arg a (drop-order u v))
-
--- dup : (A : Set) → A → Σ A × A λ p → fst p ≡ snd p
+drop-order {arg A tA d} (arg .a u) (arg .a v) | eq a with-≡ p
+         = arg eq (arg a (drop-order u v))
 
 drop-order-commutes : ∀ {A} x y
                     →  drop-order {A} x y
@@ -58,6 +57,31 @@ drop-order-commutes : ∀ {A} x y
 drop-order-commutes {ret} ret ret = refl
 drop-order-commutes {arg A tA d} (arg x u) (arg y v) with inspect (Total.compare tA x y)
                                                         | inspect (Total.compare tA y x)
-... | lt .x .y with-≡ p | lt .y .x with-≡ q = ⊥-elim (Total.lt-lt tA x y p q)
+... | lt .x .y with-≡ p | lt .y .x with-≡ q = ⊥-elim (Total.lt-lt tA x y (sym p) (sym q))
+... | gt .x .y with-≡ p | gt .y .x with-≡ q = ⊥-elim (Total.gt-gt tA x y (sym p) (sym q))
 ... | lt .x .y with-≡ p | gt .y .x with-≡ q = cong₀₁ (λ r → arg lt (arg x (arg y (arg r (u , v))))) ≡-always-≡
 ... | gt .x .y with-≡ p | lt .y .x with-≡ q = cong₀₁ (λ r → arg lt (arg y (arg x (arg r (v , u))))) ≡-always-≡
+drop-order-commutes {arg A tA d} (arg .a u) (arg .a v) | eq a with-≡ p | lt .a .a with-≡ q = ⊥-elim (Total.eq-lt tA a (sym q))
+drop-order-commutes {arg A tA d} (arg .a u) (arg .a v) | eq a with-≡ p | gt .a .a with-≡ q = ⊥-elim (Total.eq-gt tA a (sym q))
+drop-order-commutes {arg A tA d} (arg .a u) (arg .a v) | lt .a .a with-≡ p | eq a with-≡ q = ⊥-elim (Total.eq-lt tA a (sym p))
+drop-order-commutes {arg A tA d} (arg .a u) (arg .a v) | gt .a .a with-≡ p | eq a with-≡ q = ⊥-elim (Total.eq-gt tA a (sym p))
+drop-order-commutes {arg A tA d} (arg .a u) (arg .a v) | eq .a with-≡ p | eq a with-≡ q
+                  = cong₁₁ (λ x → arg eq (arg a x)) (drop-order-commutes u v)
+
+composition-preserves-commutability : {A B C : Set₁}
+                                    → (f : A → A → B)
+                                    → (g : B → C)
+                                    → (comm-f :  ∀ x y
+                                              →  f x y
+                                              ≡₁ f y x)
+                                    →  ∀ x y
+                                    →  g (f x y)
+                                    ≡₁ g (f y x)
+composition-preserves-commutability f g comm-f x y = cong₁₁ g (comm-f x y)
+
+&commutes : ∀ {A B}
+          → (f : ⟦ & A ⟧ → ⟦ B ⟧)
+          →  ∀ x y
+          →  f (drop-order x y)
+          ≡₁ f (drop-order y x)
+&commutes f = composition-preserves-commutability drop-order f drop-order-commutes
