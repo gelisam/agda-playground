@@ -1,30 +1,68 @@
 module Main where
 
-open import Data.Empty
+open import Data.Fin
 open import Data.Nat
-open import Relation.Nullary
-open import Relation.Binary.PropositionalEquality
 
-eq-dec-succ
-  : (x y : ℕ)
-  → Dec (x ≡ y)
-  → Dec (suc x ≡ suc y)
-eq-dec-succ x .x (yes refl)
-  = yes refl
-eq-dec-succ x y (no x≢y)
-  = no (go x y x≢y)
-  where
-    go : (x y : ℕ) → ¬ (x ≡ y) → suc x ≡ suc y → ⊥
-    go x .x x≢y refl = x≢y refl
 
-eq-dec
-  : (x y : ℕ)
-  → Dec (x ≡ y)
-eq-dec zero zero
-  = yes refl
-eq-dec zero (suc _)
-  = no λ()
-eq-dec (suc _) zero
-  = no λ()
-eq-dec (suc x) (suc y)
-  = eq-dec-succ x y (eq-dec x y)
+-- two recursive positions which both have access
+-- to n variables
+data App (n : ℕ)
+       : ℕ
+       → Set
+         where
+  AppFun
+    : App n n
+  AppArg
+    : App n n
+
+-- one recursive position which has access to 1+n
+-- variables
+data Lam (n : ℕ)
+       : ℕ
+       → Set
+         where
+  LamBody
+    : Lam n (suc n)
+
+data TermF : (ℕ → ℕ → Set)
+           → Set
+             where
+  TermApp
+    : TermF App
+  TermLam
+    : TermF Lam
+
+data Freer (f : (ℕ → ℕ → Set) → Set)
+           (a : ℕ → Set)
+           (outer : ℕ)
+         : Set₁
+           where
+  Pure : a outer
+       → Freer f a outer
+  Bind : ∀ {rel}
+       → f rel
+       → ( ∀ {inner}
+         → rel outer inner
+         → Freer f a inner
+         )
+       → Freer f a outer
+
+two : Freer TermF Fin 0
+two
+  = Bind TermLam λ  -- s
+    { LamBody →
+        Bind TermLam λ  -- z
+        { LamBody →
+            Bind TermApp λ
+            { AppFun →
+                Pure (# 1)  -- s
+            ; AppArg →
+                Bind TermApp λ
+                { AppFun →
+                    Pure (# 1)  -- s
+                ; AppArg →
+                    Pure (# 0)  -- z
+                }
+            }
+        }
+    }
