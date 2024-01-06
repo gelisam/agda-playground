@@ -1,5 +1,5 @@
 -- Simplified Pfenning and Davies:
-module Main where
+module PfenningDavies where
 
 open import Data.List
 open import Data.Nat using (ℕ)
