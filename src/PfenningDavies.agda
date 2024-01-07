@@ -1,4 +1,12 @@
--- Simplified Pfenning and Davies:
+-- A simplified version of Pfenning and Davies's modal type theory model of
+-- staged computation.
+--
+-- The main simplification is that there are only two phases, so the quoted
+-- terms (called 'InnerTerm' in this file) cannot themselves talk about quoted
+-- terms.
+--
+-- The other simplification is that 'LetBox' only brings variables into scope
+-- inside boxes, and thus cannot be used to evaluate quoted terms.
 module PfenningDavies where
 
 open import Data.List
