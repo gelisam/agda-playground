@@ -12,6 +12,11 @@ module PfenningDavies where
 open import Data.List
 open import Data.Nat using (ℕ)
 
+
+--------------------
+-- Standard stuff --
+--------------------
+
 _$_ : {A B : Set} → (A → B) → A → B
 _$_ f x = f x
 infixr -1 _$_
@@ -21,6 +26,10 @@ data Elem {A : Set} : A → List A → Set where
   There : ∀ {x y xs} → Elem x xs → Elem x (y ∷ xs)
 
 
+-----------
+-- Types --
+-----------
+
 data InnerTy : Set where
   NatTy : InnerTy
   _:->:_ : InnerTy → InnerTy → InnerTy
@@ -29,6 +38,11 @@ data OuterTy : Set where
   NatTy : OuterTy
   _:->:_ : OuterTy → OuterTy → OuterTy
   BoxTy : InnerTy → OuterTy
+
+
+-----------
+-- Terms --
+-----------
 
 -- delta contains both the variables bound by LetBox and
 -- the variables bound by InnerTerm.Lam and InnerTerm.Let
@@ -96,6 +110,11 @@ data OuterTerm (delta : List InnerTy) (gamma : List OuterTy) : OuterTy → Set w
     → OuterTerm delta gamma (BoxTy ty1)
     → OuterTerm (delta ++ [ ty1 ]) gamma ty2
     → OuterTerm delta gamma ty2
+
+
+--------------
+-- Examples --
+--------------
 
 mkLet1
   : OuterTerm [] [] (BoxTy NatTy)
