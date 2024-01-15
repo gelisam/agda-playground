@@ -125,6 +125,138 @@ mutual
       → MacroTerm mu gamma ty2
 
 
+---------------
+-- Weakening --
+---------------
+
+module _ {A : Set} where
+  data _⊆_ : List A → List A → Set where
+    []
+      : [] ⊆ []
+    yes∷_
+      : ∀ {x xs xys}
+      → xs ⊆ xys
+      → x ∷ xs ⊆ x ∷ xys
+    no∷_
+      : ∀ {y xs xys}
+      → xs ⊆ xys
+      → xs ⊆ y ∷ xys
+  infix 4 _⊆_
+
+  emptySubset
+    : ∀ {xys : List A}
+    → [] ⊆ xys
+  emptySubset {[]}
+    = []
+  emptySubset {y ∷ xys}
+    = no∷ (emptySubset {xys})
+
+  _++[yes]
+    : ∀ {x : A} {xs xys}
+    → xs ⊆ xys
+    → (xs ++ [ x ]) ⊆ (xys ++ [ x ])
+  [] ++[yes]
+    = yes∷ []
+  (yes∷ subset) ++[yes]
+    = yes∷ (subset ++[yes])
+  (no∷ subset) ++[yes]
+    = no∷ (subset ++[yes])
+
+  weakenElem
+    : ∀ {x : A} {xs xys}
+    → xs ⊆ xys
+    → Elem x xs
+    → Elem x xys
+  weakenElem (yes∷_ _) Here
+    = Here
+  weakenElem (yes∷ xs) (There i)
+    = There (weakenElem xs i)
+  weakenElem (no∷ xs) i
+    = There (weakenElem xs i)
+
+mutual
+  weakenTerm
+    : ∀ {mu mu' gamma gamma' ty}
+    → mu ⊆ mu'
+    → gamma ⊆ gamma'
+    → Term mu gamma ty
+    → Term mu' gamma' ty
+  weakenTerm _ gammaSubset (Var i)
+    = Var (weakenElem gammaSubset i)
+  weakenTerm _ _ Zero
+    = Zero
+  weakenTerm muSubset gammaSubset (Succ e)
+    = Succ (weakenTerm muSubset gammaSubset e)
+  weakenTerm muSubset gammaSubset (FoldNat ez es en)
+    = FoldNat
+        (weakenTerm muSubset gammaSubset ez)
+        (weakenTerm muSubset gammaSubset es)
+        (weakenTerm muSubset gammaSubset en)
+  weakenTerm muSubset gammaSubset (App f e)
+    = App
+        (weakenTerm muSubset gammaSubset f)
+        (weakenTerm muSubset gammaSubset e)
+  weakenTerm muSubset gammaSubset (Lam e)
+    = Lam (weakenTerm muSubset (gammaSubset ++[yes]) e)
+  weakenTerm muSubset gammaSubset (Let e1 e2)
+    = Let
+        (weakenTerm muSubset gammaSubset e1)
+        (weakenTerm muSubset (gammaSubset ++[yes]) e2)
+  weakenTerm muSubset gammaSubset (LetMacro e1 e2)
+    = LetMacro
+        (weakenMacroTerm muSubset gammaSubset e1)
+        (weakenTerm (muSubset ++[yes]) gammaSubset e2)
+  weakenTerm muSubset gammaSubset (MacroCall e)
+    = MacroCall (weakenMacroTerm muSubset gammaSubset e)
+
+  weakenMacroTerm
+    : ∀ {mu mu' gamma gamma' ty}
+    → mu ⊆ mu'
+    → gamma ⊆ gamma'
+    → MacroTerm mu gamma ty
+    → MacroTerm mu' gamma' ty
+  weakenMacroTerm muSubset _ (Var i)
+    = Var (weakenElem muSubset i)
+  weakenMacroTerm _ _ Zero
+    = Zero
+  weakenMacroTerm muSubset gammaSubset (Succ e)
+    = Succ (weakenMacroTerm muSubset gammaSubset e)
+  weakenMacroTerm muSubset gammaSubset (FoldNat ez es en)
+    = FoldNat
+        (weakenMacroTerm muSubset gammaSubset ez)
+        (weakenMacroTerm muSubset gammaSubset es)
+        (weakenMacroTerm muSubset gammaSubset en)
+  weakenMacroTerm muSubset gammaSubset (App f e)
+    = App
+        (weakenMacroTerm muSubset gammaSubset f)
+        (weakenMacroTerm muSubset gammaSubset e)
+  weakenMacroTerm muSubset gammaSubset (Lam e)
+    = Lam (weakenMacroTerm (muSubset ++[yes]) gammaSubset e)
+  weakenMacroTerm muSubset gammaSubset (Let e1 e2)
+    = Let
+        (weakenMacroTerm muSubset gammaSubset e1)
+        (weakenMacroTerm (muSubset ++[yes]) gammaSubset e2)
+  weakenMacroTerm muSubset gammaSubset (Quote e)
+    = Quote (weakenTerm muSubset gammaSubset e)
+  weakenMacroTerm muSubset gammaSubset (LetQuote e1 e2)
+    = LetQuote
+        (weakenMacroTerm muSubset gammaSubset e1)
+        (weakenMacroTerm muSubset (gammaSubset ++[yes]) e2)
+
+closedTerm
+  : ∀ {mu gamma ty}
+  → Term [] [] ty
+  → Term mu gamma ty
+closedTerm
+  = weakenTerm emptySubset emptySubset
+
+closedMacroTerm
+  : ∀ {mu gamma ty}
+  → MacroTerm [] [] ty
+  → MacroTerm mu gamma ty
+closedMacroTerm
+  = weakenMacroTerm emptySubset emptySubset
+
 --------------
 -- Examples --
 --------------
@@ -147,28 +279,12 @@ macroNatLit zero
 macroNatLit (suc n)
   = Succ (macroNatLit n)
 
-add'
-  : Term [] [] (NatTy :->: NatTy :->: NatTy)
-add'
-  = Lam {-x-}
-  $ Lam {-y-}
-  $ FoldNat
-      (Var {-y-} (There Here))
-      ( Lam {- x-1 + y -}
-      $ Succ (Var {- x-1 + y -} (There (There Here)))
-      )
-      (Var {-x-} Here)
-
--- TODO: weaken add' so it works in any context
 add
   : ∀ {mu gamma}
   → Term mu gamma (NatTy :->: NatTy :->: NatTy)
-add = _
-
-macroAdd'
-  : MacroTerm [] [] (NatTy :->: NatTy :->: NatTy)
-macroAdd'
-  = Lam {-x-}
+add
+  = closedTerm
+  $ Lam {-x-}
   $ Lam {-y-}
   $ FoldNat
       (Var {-y-} (There Here))
@@ -180,12 +296,23 @@ macroAdd'
 macroAdd
   : ∀ {mu gamma}
   → MacroTerm mu gamma (NatTy :->: NatTy :->: NatTy)
-macroAdd = _
+macroAdd
+  = closedMacroTerm
+  $ Lam {-x-}
+  $ Lam {-y-}
+  $ FoldNat
+      (Var {-y-} (There Here))
+      ( Lam {- x-1 + y -}
+      $ Succ (Var {- x-1 + y -} (There (There Here)))
+      )
+      (Var {-x-} Here)
 
-times'
-  : Term [] [] (NatTy :->: NatTy :->: NatTy)
-times'
-  = Lam {-x-}
+times
+  : ∀ {mu gamma}
+  → Term mu gamma (NatTy :->: NatTy :->: NatTy)
+times
+  = closedTerm
+  $ Lam {-x-}
   $ Lam {-y-}
   $ FoldNat
       Zero
@@ -198,15 +325,12 @@ times'
       )
       (Var {-x-} Here)
 
-times
+macroTimes
   : ∀ {mu gamma}
-  → Term mu gamma (NatTy :->: NatTy :->: NatTy)
-times = _
-
-macroTimes'
-  : MacroTerm [] [] (NatTy :->: NatTy :->: NatTy)
-macroTimes'
-  = Lam {-x-}
+  → MacroTerm mu gamma (NatTy :->: NatTy :->: NatTy)
+macroTimes
+  = closedMacroTerm
+  $ Lam {-x-}
   $ Lam {-y-}
   $ FoldNat
       Zero
@@ -218,11 +342,6 @@ macroTimes'
           (Var {-y-} (There Here))
       )
       (Var {-x-} Here)
-
-macroTimes
-  : ∀ {mu gamma}
-  → MacroTerm mu gamma (NatTy :->: NatTy :->: NatTy)
-macroTimes = _
 
 power : MacroTerm [] [] (NatTy :->: DiaTy NatTy :->: DiaTy NatTy)
 power
