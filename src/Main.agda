@@ -1,6 +1,6 @@
 module Main where
 
-open import Data.List
+open import Data.List using (List; []; _∷_; _++_; [_])
 open import Data.Nat using (ℕ; zero; suc)
 
 
@@ -148,8 +148,16 @@ module _ {A : Set} where
     → [] ⊆ xys
   emptySubset {[]}
     = []
-  emptySubset {y ∷ xys}
+  emptySubset {_ ∷ xys}
     = no∷ (emptySubset {xys})
+
+  fullSubset
+    : ∀ {xs : List A}
+    → xs ⊆ xs
+  fullSubset {[]}
+    = []
+  fullSubset {_ ∷ xs}
+    = yes∷ (fullSubset {xs})
 
   _++[yes]
     : ∀ {x : A} {xs xys}
@@ -192,10 +200,10 @@ mutual
         (weakenTerm muSubset gammaSubset ez)
         (weakenTerm muSubset gammaSubset es)
         (weakenTerm muSubset gammaSubset en)
-  weakenTerm muSubset gammaSubset (App f e)
+  weakenTerm muSubset gammaSubset (App ef e1)
     = App
-        (weakenTerm muSubset gammaSubset f)
-        (weakenTerm muSubset gammaSubset e)
+        (weakenTerm muSubset gammaSubset ef)
+        (weakenTerm muSubset gammaSubset e1)
   weakenTerm muSubset gammaSubset (Lam e)
     = Lam (weakenTerm muSubset (gammaSubset ++[yes]) e)
   weakenTerm muSubset gammaSubset (Let e1 e2)
@@ -226,10 +234,10 @@ mutual
         (weakenMacroTerm muSubset gammaSubset ez)
         (weakenMacroTerm muSubset gammaSubset es)
         (weakenMacroTerm muSubset gammaSubset en)
-  weakenMacroTerm muSubset gammaSubset (App f e)
+  weakenMacroTerm muSubset gammaSubset (App ef e1)
     = App
-        (weakenMacroTerm muSubset gammaSubset f)
-        (weakenMacroTerm muSubset gammaSubset e)
+        (weakenMacroTerm muSubset gammaSubset ef)
+        (weakenMacroTerm muSubset gammaSubset e1)
   weakenMacroTerm muSubset gammaSubset (Lam e)
     = Lam (weakenMacroTerm (muSubset ++[yes]) gammaSubset e)
   weakenMacroTerm muSubset gammaSubset (Let e1 e2)
@@ -371,3 +379,124 @@ square
         (Var {-power-} Here)
         (macroNatLit 2))
       (Quote (Var {-x-} Here))
+
+
+-----------------------------
+-- Values and environments --
+-----------------------------
+
+mutual
+  data Value : Ty → Set where
+    nat
+      : ℕ
+      → Value NatTy
+    closure
+      : ∀ {gamma ty1 ty2}
+      → Env gamma
+      → Term [] (gamma ++ [ ty1 ]) ty2
+      → Value (ty1 :->: ty2)
+
+  data Env : List Ty → Set where
+    []
+      : Env []
+    _∷_
+      : ∀ {ty gamma}
+      → Value ty
+      → Env gamma
+      → Env (ty ∷ gamma)
+
+mutual
+  data MacroValue (gamma : List Ty) : MacroTy → Set where
+    nat
+      : ℕ
+      → MacroValue gamma NatTy
+    closure
+      : ∀ {mu ty1 ty2}
+      → MacroEnv mu gamma
+      → MacroTerm (mu ++ [ ty1 ]) gamma ty2
+      → MacroValue gamma (ty1 :->: ty2)
+    quotedTerm
+      : ∀ {ty}
+      → Term [] gamma ty
+      → MacroValue gamma (DiaTy ty)
+
+  data MacroEnv : List MacroTy → List Ty → Set where
+    []
+      : ∀ {gamma}
+      → MacroEnv [] gamma
+    _∷_
+      : ∀ {mu gamma ty}
+      → MacroValue gamma ty
+      → MacroEnv mu gamma
+      → MacroEnv (ty ∷ mu) gamma
+
+
+--------------------------------------
+-- Value and environment operations --
+--------------------------------------
+
+lookup
+  : ∀ {ty gamma}
+  → Elem ty gamma
+  → Env gamma
+  → Value ty
+lookup Here (v ∷ _)
+  = v
+lookup (There i) (_ ∷ vs)
+  = lookup i vs
+
+lookupMacro
+  : ∀ {ty mu gamma}
+  → Elem ty mu
+  → MacroEnv mu gamma
+  → MacroValue gamma ty
+lookupMacro Here (v ∷ _)
+  = v
+lookupMacro (There i) (_ ∷ vs)
+  = lookupMacro i vs
+
+snocEnv
+  : ∀ {gamma ty}
+  → Env gamma
+  → Value ty
+  → Env (gamma ++ [ ty ])
+snocEnv [] v
+  = v ∷ []
+snocEnv (v₀ ∷ vs) v
+  = v₀ ∷ snocEnv vs v
+
+snocMacroEnv
+  : ∀ {mu gamma ty}
+  → MacroEnv mu gamma
+  → MacroValue gamma ty
+  → MacroEnv (mu ++ [ ty ]) gamma
+snocMacroEnv [] v
+  = v ∷ []
+snocMacroEnv (v₀ ∷ vs) v
+  = v₀ ∷ snocMacroEnv vs v
+
+mutual
+  weakenMacroValue
+    : ∀ {gamma gamma' ty}
+    → gamma ⊆ gamma'
+    → MacroValue gamma ty
+    → MacroValue gamma' ty
+  weakenMacroValue _ (nat n)
+    = nat n
+  weakenMacroValue subset (closure env e)
+    = closure
+        (weakenMacroEnv subset env)
+        (weakenMacroTerm fullSubset subset e)
+  weakenMacroValue subset (quotedTerm e)
+    = quotedTerm (weakenTerm fullSubset subset e)
+
+  weakenMacroEnv
+    : ∀ {mu gamma gamma'}
+    → gamma ⊆ gamma'
+    → MacroEnv mu gamma
+    → MacroEnv mu gamma'
+  weakenMacroEnv _ []
+    = []
+  weakenMacroEnv subset (v ∷ vs)
+    = weakenMacroValue subset v
+    ∷ weakenMacroEnv subset vs
