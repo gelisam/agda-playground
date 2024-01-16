@@ -170,6 +170,17 @@ module _ {A : Set} where
   (no∷ subset) ++[yes]
     = no∷ (subset ++[yes])
 
+  _++[no]
+    : ∀ {x : A} {xs xys}
+    → xs ⊆ xys
+    → xs ⊆ (xys ++ [ x ])
+  [] ++[no]
+    = no∷ []
+  (yes∷ subset) ++[no]
+    = yes∷ (subset ++[no])
+  (no∷ subset) ++[no]
+    = no∷ (subset ++[no])
+
   weakenElem
     : ∀ {x : A} {xs xys}
     → xs ⊆ xys
@@ -264,6 +275,7 @@ closedMacroTerm
   → MacroTerm mu gamma ty
 closedMacroTerm
   = weakenMacroTerm emptySubset emptySubset
+
 
 --------------
 -- Examples --
@@ -500,3 +512,108 @@ mutual
   weakenMacroEnv subset (v ∷ vs)
     = weakenMacroValue subset v
     ∷ weakenMacroEnv subset vs
+
+
+---------------------
+-- Macro expansion --
+---------------------
+
+foldℕ : ∀ {A : Set} → A → (A → A) → ℕ → A
+foldℕ z _ zero
+  = z
+foldℕ z s (suc n)
+  = s (foldℕ z s n)
+
+-- TODO: does foldNatMacro terminate?
+{-# NON_TERMINATING #-}
+mutual
+  expand
+    : ∀ {mu gamma ty}
+    → MacroEnv mu gamma
+    → Term mu gamma ty
+    → Term [] gamma ty
+  expand _ (Var i)
+    = Var i
+  expand _ Zero
+    = Zero
+  expand env (Succ e)
+    = Succ (expand env e)
+  expand env (FoldNat ez es en)
+    = FoldNat
+        (expand env ez)
+        (expand env es)
+        (expand env en)
+  expand env (App ef e1)
+    = App
+        (expand env ef)
+        (expand env e1)
+  expand {mu} {gamma} env (Lam {ty1} e)
+    = Lam (expand env' e)
+    where
+      env' : MacroEnv mu (gamma ++ [ ty1 ])
+      env' = weakenMacroEnv (fullSubset ++[no]) env
+  expand {mu} {gamma} env (Let {ty1} e1 e2)
+    = Let
+        (expand env e1)
+        (expand env' e2)
+    where
+      env' : MacroEnv mu (gamma ++ [ ty1 ])
+      env' = weakenMacroEnv (fullSubset ++[no]) env
+  expand {mu} {gamma} env (LetMacro {ty1} e1 e2)
+    = expand env' e2
+    where
+      v1 : MacroValue gamma ty1
+      v1 = evalMacroTerm env e1
+
+      env' : MacroEnv (mu ++ [ ty1 ]) gamma
+      env' = snocMacroEnv env v1
+  expand env (MacroCall e) with evalMacroTerm env e
+  ... | quotedTerm e'
+    = e'
+
+  evalMacroTerm
+    : ∀ {mu gamma ty}
+    → MacroEnv mu gamma
+    → MacroTerm mu gamma ty
+    → MacroValue gamma ty
+  evalMacroTerm env (Var i)
+    = lookupMacro i env
+  evalMacroTerm _ Zero
+    = nat zero
+  evalMacroTerm env (Succ e) with evalMacroTerm env e
+  ... | nat n
+    = nat (suc n)
+  evalMacroTerm env (FoldNat ez es en) with evalMacroTerm env ez | evalMacroTerm env es | evalMacroTerm env en
+  ... | vz | closure capturedEnv e2 | nat n
+    = foldNatMacro vz capturedEnv e2 n
+  evalMacroTerm env (App ef e1) with evalMacroTerm env ef | evalMacroTerm env e1
+  ... | closure capturedEnv e2 | v1
+    = evalMacroTerm (snocMacroEnv capturedEnv v1) e2
+  evalMacroTerm env (Lam e)
+    = closure env e
+  evalMacroTerm env (Let e1 e2) with evalMacroTerm env e1
+  ... | v1
+    = evalMacroTerm (snocMacroEnv env v1) e2
+  evalMacroTerm env (Quote e)
+    = quotedTerm (expand env e)
+  evalMacroTerm {mu} {gamma} env (LetQuote {ty1} e1 e2) with evalMacroTerm env e1
+  ... | quotedTerm e'
+    = -- TODO: add a second environment parameter to track
+      -- the let-quoted variables.
+      _
+
+  foldNatMacro
+    : ∀ {mu gamma ty}
+    → MacroValue gamma ty
+    → MacroEnv mu gamma
+    → MacroTerm (mu  ++ [ ty ]) gamma ty
+    → ℕ
+    → MacroValue gamma ty
+  foldNatMacro vz _ _ zero
+    = vz
+  foldNatMacro {mu} {gamma} {ty} vz env e2 (suc n) with foldNatMacro vz env e2 n
+  ... | v1
+    = evalMacroTerm env' e2
+    where
+      env' : MacroEnv (mu ++ [ ty ]) gamma
+      env' = snocMacroEnv env v1
