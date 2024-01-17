@@ -1,7 +1,13 @@
+{-# OPTIONS --sized-types #-}
 module Main where
 
+open import Codata.Sized.Delay using (Delay; now; later; bind; runFor)
+open import Codata.Sized.Thunk using (force)
 open import Data.List using (List; []; _∷_; _++_; [_])
+open import Data.Maybe using (just)
 open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Size using (Size)
 
 
 --------------------
@@ -11,6 +17,9 @@ open import Data.Nat using (ℕ; zero; suc)
 _$_ : {A B : Set} → (A → B) → A → B
 _$_ f x = f x
 infixr -1 _$_
+
+_>>=_ : ∀ {A B : Set} {i} → Delay A i → (A → Delay B i) → Delay B i
+_>>=_ = bind
 
 data Elem {A : Set} : A → List A → Set where
   Here : ∀ {x xs} → Elem x (x ∷ xs)
@@ -253,21 +262,43 @@ snocEnv (v₀ ∷ vs) v
 -- Evaluation --
 ----------------
 
-{-# NON_TERMINATING #-}
+-- STLC is strongly-normalizing, but proving so is not the point of this
+-- example, so we use Delay to allow the evaluator to diverge. Later, we
+-- use runFor to evaluate the examples for a finite number of steps.
+
 evalTerm
-  : ∀ {gamma ty}
+  : ∀ {gamma ty i}
   → Env gamma
   → Term gamma ty
-  → Value ty
-evalTerm env (Var i)
-  = lookup i env
-evalTerm _ Zero
-  = Nat 0
-evalTerm env (Succ e) with evalTerm env e
-... | Nat n
-  = Nat (suc n)
-evalTerm env (App ef e1) with evalTerm env ef | evalTerm env e1
-... | Closure capturedEnv e2 | v1
-  = evalTerm (snocEnv capturedEnv v1) e2
-evalTerm env (Lam e)
-  = Closure env e
+  → Delay (Value ty) i
+evalTerm env (Var i) = do
+  now $ lookup i env
+evalTerm _ Zero = do
+  now (Nat 0)
+evalTerm env (Succ e) = later λ where .force → do
+  Nat n ← evalTerm env e
+  now $ Nat $ suc n
+evalTerm env (App ef e1) = later λ where .force → do
+  Closure capturedEnv e2 ← evalTerm env ef
+  v1 ← evalTerm env e1
+  v2 ← evalTerm (snocEnv capturedEnv v1) e2
+  now v2
+evalTerm env (Lam e) = do
+  now $ Closure env e
+
+
+----------------------
+-- Run the examples --
+----------------------
+
+evalZero : runFor 2 (evalTerm [] (Succ Zero))
+         ≡ just (Nat 1)
+evalZero = refl
+
+evalTwo : runFor 7 (evalTerm [] (two · succ · Zero))
+        ≡ just (Nat 2)
+evalTwo = refl
+
+evalFour : runFor 17 (evalTerm [] (four · succ · Zero))
+         ≡ just (Nat 4)
+evalFour = refl
