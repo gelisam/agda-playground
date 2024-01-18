@@ -325,6 +325,153 @@ square
       (Quote (Var {-x-} Here))
 
 
+------------------
+-- Substitution --
+------------------
+
+-- A simultaneous substitution: all the variables in sigma are replaced with a
+-- Term in gamma. We only use this during macro expansion, not during
+-- evaluation, so we don't need a separate type for replacing variables with
+-- MacroTerms.
+
+data Subst (gamma : List Ty) : List Ty → Set where
+  []
+    : Subst gamma []
+  _∷_
+    : ∀ {ty sigma}
+    → Term [] gamma ty
+    → Subst gamma sigma
+    → Subst gamma (ty ∷ sigma)
+
+weakenSubst
+  : ∀ {gamma gamma' sigma}
+  → gamma ⊆ gamma'
+  → Subst gamma sigma
+  → Subst gamma' sigma
+weakenSubst _ []
+  = []
+weakenSubst subset (e ∷ subst)
+  = weakenTerm fullSubset subset e
+  ∷ weakenSubst subset subst
+
+idSubst
+  : ∀ {gamma}
+  → Subst gamma gamma
+idSubst {[]}
+  = []
+idSubst {_ ∷ gamma}
+  = Var Here
+  ∷ weakenSubst (no∷ fullSubset) idSubst
+
+-- Extend the substitution with a variable which gets replaced by itself.
+_++[var]
+  : ∀ {gamma sigma ty}
+  → Subst gamma sigma
+  → Subst (gamma ++ [ ty ]) (sigma ++ [ ty ])
+[] ++[var]
+  = Var lastElem ∷ []
+(e ∷ subst) ++[var]
+  = weakenTerm fullSubset (fullSubset ++[no]) e
+  ∷ subst ++[var]
+
+snocSubst
+  : ∀ {gamma sigma ty}
+  → Subst gamma sigma
+  → Term [] gamma ty
+  → Subst gamma (sigma ++ [ ty ])
+snocSubst [] e
+  = e ∷ []
+snocSubst (e₀ ∷ subst) e
+  = e₀ ∷ snocSubst subst e
+
+substVar
+  : ∀ {gamma sigma ty}
+  → Subst gamma sigma
+  → Elem ty sigma
+  → Term [] gamma ty
+substVar (e ∷ _) Here
+  = e
+substVar (_ ∷ sigma) (There i)
+  = substVar sigma i
+
+mutual
+  substTerm
+    : ∀ {mu gamma sigma ty}
+    → Subst gamma sigma
+    → Term mu sigma ty
+    → Term mu gamma ty
+  substTerm subst (Var i)
+    = weakenTerm emptySubset fullSubset
+    $ substVar subst i
+  substTerm _ Zero
+    = Zero
+  substTerm subst (Succ e)
+    = Succ (substTerm subst e)
+  substTerm subst (FoldNat ez es en)
+    = FoldNat
+        (substTerm subst ez)
+        (substTerm subst es)
+        (substTerm subst en)
+  substTerm subst (App ef e1)
+    = App
+        (substTerm subst ef)
+        (substTerm subst e1)
+  substTerm {mu} {gamma} {sigma} subst (Lam {ty1} e)
+    = Lam (substTerm subst' e)
+    where
+      subst' : Subst (gamma ++ [ ty1 ]) (sigma ++ [ ty1 ])
+      subst' = subst ++[var]
+  substTerm {mu} {gamma} {sigma} subst (Let {ty1} e1 e2)
+    = Let
+        (substTerm subst e1)
+        (substTerm subst' e2)
+    where
+      subst' : Subst (gamma ++ [ ty1 ]) (sigma ++ [ ty1 ])
+      subst' = subst ++[var]
+  substTerm {mu} {gamma} {sigma} subst (LetMacro {ty1} e1 e2)
+    = LetMacro
+        (substMacroTerm subst e1)
+        (substTerm subst e2)
+  substTerm subst (MacroCall e)
+    = MacroCall (substMacroTerm subst e)
+
+  substMacroTerm
+    : ∀ {mu gamma sigma ty}
+    → Subst gamma sigma
+    → MacroTerm mu sigma ty
+    → MacroTerm mu gamma ty
+  substMacroTerm _ (Var i)
+    = Var i
+  substMacroTerm _ Zero
+    = Zero
+  substMacroTerm subst (Succ e)
+    = Succ (substMacroTerm subst e)
+  substMacroTerm subst (FoldNat ez es en)
+    = FoldNat
+        (substMacroTerm subst ez)
+        (substMacroTerm subst es)
+        (substMacroTerm subst en)
+  substMacroTerm subst (App ef e1)
+    = App
+        (substMacroTerm subst ef)
+        (substMacroTerm subst e1)
+  substMacroTerm subst (Lam e)
+    = Lam (substMacroTerm subst e)
+  substMacroTerm subst (Let e1 e2)
+    = Let
+        (substMacroTerm subst e1)
+        (substMacroTerm subst e2)
+  substMacroTerm subst (Quote e)
+    = Quote (substTerm subst e)
+  substMacroTerm {mu} {gamma} {sigma} subst (LetQuote {ty1} e1 e2)
+    = LetQuote
+        (substMacroTerm subst e1)
+        (substMacroTerm subst' e2)
+    where
+      subst' : Subst (gamma ++ [ ty1 ]) (sigma ++ [ ty1 ])
+      subst' = subst ++[var]
+
+
 -----------------------------
 -- Values and environments --
 -----------------------------
@@ -359,7 +506,7 @@ mutual
       → MacroEnv mu gamma
       → MacroTerm (mu ++ [ ty1 ]) gamma ty2
       → MacroValue gamma (ty1 :->: ty2)
-    quotedTerm
+    QuotedTerm
       : ∀ {ty}
       → Term [] gamma ty
       → MacroValue gamma (DiaTy ty)
@@ -431,8 +578,8 @@ mutual
     = Closure
         (weakenMacroEnv subset env)
         (weakenMacroTerm fullSubset subset e)
-  weakenMacroValue subset (quotedTerm e)
-    = quotedTerm (weakenTerm fullSubset subset e)
+  weakenMacroValue subset (QuotedTerm e)
+    = QuotedTerm (weakenTerm fullSubset subset e)
 
   weakenMacroEnv
     : ∀ {mu gamma gamma'}
@@ -496,7 +643,7 @@ mutual
     e2' ← expand env' e2
     now e2'
   expand env (MacroCall e) = later λ where .force → do
-    quotedTerm e' ← evalMacroTerm env e
+    QuotedTerm e' ← evalMacroTerm env e
     now e'
 
   evalMacroTerm
@@ -544,9 +691,11 @@ mutual
     now v2
   evalMacroTerm env (Quote e) = later λ where .force → do
     e' ← expand env e
-    now $ quotedTerm e'
-  evalMacroTerm {mu} {gamma} env (LetQuote {ty1} e1 e2) = later λ where .force → do
-    quotedTerm e1' ← evalMacroTerm env e1
-    -- TODO: add a second environment parameter to track
-    -- the let-quoted variables.
-    _
+    now $ QuotedTerm e'
+  evalMacroTerm {mu} {gamma} env (LetQuote {ty1} {ty2} e1 e2) = later λ where .force → do
+    QuotedTerm e1' ← evalMacroTerm env e1
+    let subst : Subst gamma (gamma ++ [ ty1 ])
+        subst = snocSubst idSubst e1'
+    let e2 : MacroTerm mu gamma ty2
+        e2 = substMacroTerm subst e2
+    evalMacroTerm env e2
