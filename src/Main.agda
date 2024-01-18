@@ -1,6 +1,10 @@
+{-# OPTIONS --sized-types #-}
 module Main where
 
+open import Codata.Sized.Delay using (Delay; now; later; bind; runFor)
+open import Codata.Sized.Thunk using (force)
 open import Data.List using (List; []; _∷_; _++_; [_])
+open import Data.Maybe using (just)
 open import Data.Nat using (ℕ; zero; suc)
 
 
@@ -11,6 +15,9 @@ open import Data.Nat using (ℕ; zero; suc)
 _$_ : {A B : Set} → (A → B) → A → B
 _$_ f x = f x
 infixr -1 _$_
+
+_>>=_ : ∀ {A B : Set} {i} → Delay A i → (A → Delay B i) → Delay B i
+_>>=_ = bind
 
 data Elem {A : Set} : A → List A → Set where
   Here : ∀ {x xs} → Elem x (x ∷ xs)
@@ -399,10 +406,10 @@ square
 
 mutual
   data Value : Ty → Set where
-    nat
+    Nat
       : ℕ
       → Value NatTy
-    closure
+    Closure
       : ∀ {gamma ty1 ty2}
       → Env gamma
       → Term [] (gamma ++ [ ty1 ]) ty2
@@ -419,10 +426,10 @@ mutual
 
 mutual
   data MacroValue (gamma : List Ty) : MacroTy → Set where
-    nat
+    Nat
       : ℕ
       → MacroValue gamma NatTy
-    closure
+    Closure
       : ∀ {mu ty1 ty2}
       → MacroEnv mu gamma
       → MacroTerm (mu ++ [ ty1 ]) gamma ty2
@@ -493,10 +500,10 @@ mutual
     → gamma ⊆ gamma'
     → MacroValue gamma ty
     → MacroValue gamma' ty
-  weakenMacroValue _ (nat n)
-    = nat n
-  weakenMacroValue subset (closure env e)
-    = closure
+  weakenMacroValue _ (Nat n)
+    = Nat n
+  weakenMacroValue subset (Closure env e)
+    = Closure
         (weakenMacroEnv subset env)
         (weakenMacroTerm fullSubset subset e)
   weakenMacroValue subset (quotedTerm e)
@@ -518,102 +525,103 @@ mutual
 -- Macro expansion --
 ---------------------
 
-foldℕ : ∀ {A : Set} → A → (A → A) → ℕ → A
-foldℕ z _ zero
-  = z
-foldℕ z s (suc n)
-  = s (foldℕ z s n)
+-- I don't know if this calculus is strongly-normalizing, but I don't even know
+-- how to prove that the STLC is strongly-normalizing, so I won't attempt to
+-- prove that this more complex calculus is. Instead, we use Delay to allow the
+-- expander and evaluator to diverge. Later, we use runFor to expand and
+-- evaluate the examples for a finite number of steps.
 
--- TODO: does foldNatMacro terminate?
-{-# NON_TERMINATING #-}
 mutual
   expand
-    : ∀ {mu gamma ty}
+    : ∀ {mu gamma ty i}
     → MacroEnv mu gamma
     → Term mu gamma ty
-    → Term [] gamma ty
-  expand _ (Var i)
-    = Var i
-  expand _ Zero
-    = Zero
-  expand env (Succ e)
-    = Succ (expand env e)
-  expand env (FoldNat ez es en)
-    = FoldNat
-        (expand env ez)
-        (expand env es)
-        (expand env en)
-  expand env (App ef e1)
-    = App
-        (expand env ef)
-        (expand env e1)
-  expand {mu} {gamma} env (Lam {ty1} e)
-    = Lam (expand env' e)
-    where
-      env' : MacroEnv mu (gamma ++ [ ty1 ])
-      env' = weakenMacroEnv (fullSubset ++[no]) env
-  expand {mu} {gamma} env (Let {ty1} e1 e2)
-    = Let
-        (expand env e1)
-        (expand env' e2)
-    where
-      env' : MacroEnv mu (gamma ++ [ ty1 ])
-      env' = weakenMacroEnv (fullSubset ++[no]) env
-  expand {mu} {gamma} env (LetMacro {ty1} e1 e2)
-    = expand env' e2
-    where
-      v1 : MacroValue gamma ty1
-      v1 = evalMacroTerm env e1
-
-      env' : MacroEnv (mu ++ [ ty1 ]) gamma
-      env' = snocMacroEnv env v1
-  expand env (MacroCall e) with evalMacroTerm env e
-  ... | quotedTerm e'
-    = e'
+    → Delay (Term [] gamma ty) i
+  expand _ (Var i) = do
+    now $ Var i
+  expand _ Zero = do
+    now Zero
+  expand env (Succ e) = later λ where .force → do
+    e' ← expand env e
+    now $ Succ e'
+  expand env (FoldNat ez es en) = later λ where .force → do
+    ez' ← expand env ez
+    es' ← expand env es
+    en' ← expand env en
+    now $ FoldNat ez' es' en'
+  expand env (App ef e1) = later λ where .force → do
+    ef' ← expand env ef
+    e1' ← expand env e1
+    now $ App ef' e1'
+  expand {mu} {gamma} env (Lam {ty1} e) = do
+    let env' : MacroEnv mu (gamma ++ [ ty1 ])
+        env' = weakenMacroEnv (fullSubset ++[no]) env
+    e' ← expand env' e
+    now $ Lam e'
+  expand {mu} {gamma} env (Let {ty1} e1 e2) = do
+    e1' ← expand env e1
+    let env' : MacroEnv mu (gamma ++ [ ty1 ])
+        env' = weakenMacroEnv (fullSubset ++[no]) env
+    e2' ← expand env' e2
+    now $ Let e1' e2'
+  expand {mu} {gamma} env (LetMacro {ty1} e1 e2) = later λ where .force → do
+    v1 ← evalMacroTerm env e1
+    let env' : MacroEnv (mu ++ [ ty1 ]) gamma
+        env' = snocMacroEnv env v1
+    e2' ← expand env' e2
+    now e2'
+  expand env (MacroCall e) = later λ where .force → do
+    quotedTerm e' ← evalMacroTerm env e
+    now e'
 
   evalMacroTerm
-    : ∀ {mu gamma ty}
+    : ∀ {mu gamma ty i}
     → MacroEnv mu gamma
     → MacroTerm mu gamma ty
-    → MacroValue gamma ty
-  evalMacroTerm env (Var i)
-    = lookupMacro i env
-  evalMacroTerm _ Zero
-    = nat zero
-  evalMacroTerm env (Succ e) with evalMacroTerm env e
-  ... | nat n
-    = nat (suc n)
-  evalMacroTerm env (FoldNat ez es en) with evalMacroTerm env ez | evalMacroTerm env es | evalMacroTerm env en
-  ... | vz | closure capturedEnv e2 | nat n
-    = foldNatMacro vz capturedEnv e2 n
-  evalMacroTerm env (App ef e1) with evalMacroTerm env ef | evalMacroTerm env e1
-  ... | closure capturedEnv e2 | v1
-    = evalMacroTerm (snocMacroEnv capturedEnv v1) e2
-  evalMacroTerm env (Lam e)
-    = closure env e
-  evalMacroTerm env (Let e1 e2) with evalMacroTerm env e1
-  ... | v1
-    = evalMacroTerm (snocMacroEnv env v1) e2
-  evalMacroTerm env (Quote e)
-    = quotedTerm (expand env e)
-  evalMacroTerm {mu} {gamma} env (LetQuote {ty1} e1 e2) with evalMacroTerm env e1
-  ... | quotedTerm e'
-    = -- TODO: add a second environment parameter to track
-      -- the let-quoted variables.
-      _
-
-  foldNatMacro
-    : ∀ {mu gamma ty}
-    → MacroValue gamma ty
-    → MacroEnv mu gamma
-    → MacroTerm (mu  ++ [ ty ]) gamma ty
-    → ℕ
-    → MacroValue gamma ty
-  foldNatMacro vz _ _ zero
-    = vz
-  foldNatMacro {mu} {gamma} {ty} vz env e2 (suc n) with foldNatMacro vz env e2 n
-  ... | v1
-    = evalMacroTerm env' e2
+    → Delay (MacroValue gamma ty) i
+  evalMacroTerm env (Var i) = do
+    now $ lookupMacro i env
+  evalMacroTerm _ Zero = do
+    now $ Nat zero
+  evalMacroTerm env (Succ e) = later λ where .force → do
+    Nat n ← evalMacroTerm env e
+    now $ Nat $ suc n
+  evalMacroTerm {mu} {gamma} {ty} {i} env (FoldNat ez es en) = later λ where .force → do
+    Nat n ← evalMacroTerm env en
+    evalMacroTerm env
+      ( Let ez
+      $ Let (weakenMacroTerm (fullSubset ++[no]) fullSubset es)
+      $ weakenMacroTerm (emptySubset ++[yes] ++[yes]) emptySubset
+      $ go n
+      )
     where
-      env' : MacroEnv (mu ++ [ ty ]) gamma
-      env' = snocMacroEnv env v1
+      z : MacroTerm (ty ∷ (ty :->: ty) ∷ []) [] ty
+      z = Var Here
+
+      s : MacroTerm (ty ∷ (ty :->: ty) ∷ []) [] (ty :->: ty)
+      s = Var (There Here)
+
+      go : ℕ → MacroTerm (ty ∷ (ty :->: ty) ∷ []) [] ty
+      go zero
+        = z
+      go (suc n)
+        = App s (go n)
+  evalMacroTerm env (App ef e1) = later λ where .force → do
+    Closure capturedEnv e2 ← evalMacroTerm env ef
+    v1 ← evalMacroTerm env e1
+    v2 ← evalMacroTerm (snocMacroEnv capturedEnv v1) e2
+    now v2
+  evalMacroTerm env (Lam e) = do
+    now $ Closure env e
+  evalMacroTerm env (Let e1 e2) = later λ where .force → do
+    v1 ← evalMacroTerm env e1
+    v2 ← evalMacroTerm (snocMacroEnv env v1) e2
+    now v2
+  evalMacroTerm env (Quote e) = later λ where .force → do
+    e' ← expand env e
+    now $ quotedTerm e'
+  evalMacroTerm {mu} {gamma} env (LetQuote {ty1} e1 e2) = later λ where .force → do
+    quotedTerm e1' ← evalMacroTerm env e1
+    -- TODO: add a second environment parameter to track
+    -- the let-quoted variables.
+    _
