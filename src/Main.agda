@@ -213,6 +213,22 @@ closedMacroTerm
 -- Examples --
 --------------
 
+_·_
+  : ∀ {mu gamma ty1 ty2}
+  → Term mu gamma (ty1 :->: ty2)
+  → Term mu gamma ty1
+  → Term mu gamma ty2
+_·_ = App
+infixl 9 _·_
+
+_●_
+  : ∀ {mu gamma ty1 ty2}
+  → MacroTerm mu gamma (ty1 :->: ty2)
+  → MacroTerm mu gamma ty1
+  → MacroTerm mu gamma ty2
+_●_ = App
+infixl 9 _●_
+
 natLit
   : ∀ {mu gamma}
   → ℕ
@@ -266,12 +282,7 @@ times
   = closedTerm
   $ Lam $ let x = Var Here
  in Lam $ let y = Var (There Here)
- in FoldNat
-      Zero
-      ( Lam $ let ⟨x-1⟩*y = Var (There (There Here))
-     in App (App add ⟨x-1⟩*y) y
-      )
-      x
+ in FoldNat Zero (add · y) x
 
 macroTimes
   : ∀ {mu gamma}
@@ -280,12 +291,7 @@ macroTimes
   = closedMacroTerm
   $ Lam $ let x = Var Here
  in Lam $ let y = Var (There Here)
- in FoldNat
-      Zero
-      ( Lam $ let ⟨x-1⟩*y = Var (There (There Here))
-      in App (App macroAdd ⟨x-1⟩*y) y
-      )
-      x
+ in FoldNat Zero (macroAdd ● y) x
 
 power : MacroTerm [] [] (NatTy :->: DiaTy NatTy :->: DiaTy NatTy)
 power
@@ -297,7 +303,7 @@ power
       ( Lam $ let diaX^⟨x-1⟩ = Var (There (There Here))
      in LetQuote diaX^⟨x-1⟩ $ let x^⟨x-1⟩ = Var (There Here)
      in Quote
-      $ App (App times x^⟨x-1⟩) x
+      $ times · x^⟨x-1⟩ · x
       )
       n
 
@@ -306,7 +312,7 @@ square
   = LetMacro power $ let power = Var Here
  in Lam $ let x = Var Here
  in MacroCall
-  $ App (App power (macroNatLit 2)) (Quote x)
+  $ power ● macroNatLit 2 ● Quote x
 
 
 ------------------
