@@ -6,6 +6,7 @@ open import Codata.Sized.Thunk using (force)
 open import Data.List using (List; []; _∷_; _++_; [_])
 open import Data.Maybe using (just)
 open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Prelude
 
@@ -293,9 +294,12 @@ macroTimes
  in Lam $ let y = Var (There Here)
  in FoldNat Zero (macroAdd ● y) x
 
-power : MacroTerm [] [] (NatTy :->: DiaTy NatTy :->: DiaTy NatTy)
 power
-  = Lam $ let n = Var Here
+  : ∀ {mu gamma}
+  → MacroTerm mu gamma (NatTy :->: DiaTy NatTy :->: DiaTy NatTy)
+power
+  = closedMacroTerm
+  $ Lam $ let n = Var Here
  in Lam $ let diaX = Var (There Here)
  in LetQuote diaX $ let x = Var Here
  in FoldNat
@@ -307,9 +311,12 @@ power
       )
       n
 
-square : Term [] [] (NatTy :->: NatTy)
 square
-  = LetMacro power $ let power = Var Here
+  : ∀ {mu gamma}
+  → Term mu gamma (NatTy :->: NatTy)
+square
+  = closedTerm
+  $ LetMacro power $ let power = Var Here
  in Lam $ let x = Var Here
  in MacroCall
   $ power ● macroNatLit 2 ● Quote x
@@ -694,3 +701,14 @@ mutual
     let e2 : MacroTerm mu gamma ty2
         e2 = substMacroTerm subst e2
     evalMacroTerm env e2
+
+
+-------------------------
+-- Expand the examples --
+-------------------------
+
+expandSquare : runFor 40 (expand {[]} {[]} [] square)
+             ≡ just ( Lam $ let x = Var Here
+                   in times · (times · natLit 1 · x) · x
+                    )
+expandSquare = refl
