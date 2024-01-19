@@ -597,11 +597,13 @@ mutual
 -- Macro expansion --
 ---------------------
 
--- I don't know if this calculus is strongly-normalizing, but I don't even know
--- how to prove that the STLC is strongly-normalizing, so I won't attempt to
--- prove that this more complex calculus is. Instead, we use Delay to allow the
--- expander and evaluator to diverge. Later, we use runFor to expand and
--- evaluate the examples for a finite number of steps.
+-- expand evaluates all the MacroTerms contained inside a Term, while keeping
+-- the Term portions intact. LetQuote-bound variables and MacroCall invocations
+-- are replaced with the calculated Terms.
+--
+-- I don't know if this calculus is strongly-normalizing, so I use Delay to
+-- allow the expander and evaluator to diverge. Later, I use runFor to expand
+-- and evaluate the examples for a finite number of steps.
 
 mutual
   expand
@@ -693,6 +695,9 @@ mutual
     e' ← expand env e
     now $ QuotedTerm e'
   evalMacroTerm {mu} {gamma} env (LetQuote {ty1} {ty2} e1 e2) = later λ where .force → do
+    -- It's a bit strange to use a substitution in the middle of an
+    -- environment-based evaluator, but I tried a few alternatives and this
+    -- seems to be the most straightforward way to do it.
     QuotedTerm e1' ← evalMacroTerm env e1
     let subst : Subst gamma (gamma ++ [ ty1 ])
         subst = snocSubst idSubst e1'
