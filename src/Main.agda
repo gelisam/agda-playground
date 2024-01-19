@@ -236,93 +236,77 @@ add
   → Term mu gamma (NatTy :->: NatTy :->: NatTy)
 add
   = closedTerm
-  $ Lam {-x-}
-  $ Lam {-y-}
-  $ FoldNat
-      (Var {-y-} (There Here))
-      ( Lam {- x-1 + y -}
-      $ Succ (Var {- x-1 + y -} (There (There Here)))
+  $ Lam $ let x = Var Here
+ in Lam $ let y = Var (There Here)
+ in FoldNat
+      y
+      ( Lam $ let x-1+y = Var (There (There Here))
+     in Succ x-1+y
       )
-      (Var {-x-} Here)
+      x
 
 macroAdd
   : ∀ {mu gamma}
   → MacroTerm mu gamma (NatTy :->: NatTy :->: NatTy)
 macroAdd
   = closedMacroTerm
-  $ Lam {-x-}
-  $ Lam {-y-}
-  $ FoldNat
-      (Var {-y-} (There Here))
-      ( Lam {- x-1 + y -}
-      $ Succ (Var {- x-1 + y -} (There (There Here)))
+  $ Lam $ let x = Var Here
+ in Lam $ let y = Var (There Here)
+ in FoldNat
+      y
+      ( Lam $ let x-1+y = Var (There (There Here))
+     in Succ x-1+y
       )
-      (Var {-x-} Here)
+      x
 
 times
   : ∀ {mu gamma}
   → Term mu gamma (NatTy :->: NatTy :->: NatTy)
 times
   = closedTerm
-  $ Lam {-x-}
-  $ Lam {-y-}
-  $ FoldNat
+  $ Lam $ let x = Var Here
+ in Lam $ let y = Var (There Here)
+ in FoldNat
       Zero
-      ( Lam {- (x-1) * y -}
-      $ App
-          (App
-            add
-            (Var {- (x-1) * y -} (There (There Here))))
-          (Var {-y-} (There Here))
+      ( Lam $ let ⟨x-1⟩*y = Var (There (There Here))
+     in App (App add ⟨x-1⟩*y) y
       )
-      (Var {-x-} Here)
+      x
 
 macroTimes
   : ∀ {mu gamma}
   → MacroTerm mu gamma (NatTy :->: NatTy :->: NatTy)
 macroTimes
   = closedMacroTerm
-  $ Lam {-x-}
-  $ Lam {-y-}
-  $ FoldNat
+  $ Lam $ let x = Var Here
+ in Lam $ let y = Var (There Here)
+ in FoldNat
       Zero
-      ( Lam {- (x-1) * y -}
-      $ App
-          (App
-            macroAdd
-            (Var {- (x-1) * y -} (There (There Here))))
-          (Var {-y-} (There Here))
+      ( Lam $ let ⟨x-1⟩*y = Var (There (There Here))
+      in App (App macroAdd ⟨x-1⟩*y) y
       )
-      (Var {-x-} Here)
+      x
 
 power : MacroTerm [] [] (NatTy :->: DiaTy NatTy :->: DiaTy NatTy)
 power
-  = Lam {-n-}
-  $ Lam {-diaX-}
-  $ LetQuote {-x-} (Var {-diaX-} (There Here))
-  $ FoldNat
+  = Lam $ let n = Var Here
+ in Lam $ let diaX = Var (There Here)
+ in LetQuote diaX $ let x = Var Here
+ in FoldNat
       (Quote (natLit 1))
-      ( Lam {- power (n-1) diaX -}
-      $ LetQuote {- power (n-1) x -} (Var {- power (n-1) diaX -} (There (There Here)))
-      $ Quote
-      $ App
-          (App
-            times
-            (Var {- power (n-1) x -} (There Here)))
-          (Var {-x-} Here)
+      ( Lam $ let diaX^⟨x-1⟩ = Var (There (There Here))
+     in LetQuote diaX^⟨x-1⟩ $ let x^⟨x-1⟩ = Var (There Here)
+     in Quote
+      $ App (App times x^⟨x-1⟩) x
       )
-      (Var {-n-} Here)
+      n
 
 square : Term [] [] (NatTy :->: NatTy)
 square
-  = LetMacro {-power-} power
-  $ Lam {-x-}
-  $ MacroCall
-  $ App
-      (App
-        (Var {-power-} Here)
-        (macroNatLit 2))
-      (Quote (Var {-x-} Here))
+  = LetMacro power $ let power = Var Here
+ in Lam $ let x = Var Here
+ in MacroCall
+  $ App (App power (macroNatLit 2)) (Quote x)
 
 
 ------------------
